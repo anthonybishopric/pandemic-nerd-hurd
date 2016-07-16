@@ -6,6 +6,11 @@ import (
 
 const EpidemicsPerGame = 5
 
+type GameState struct {
+	CityDeck      CityDeck      `json:"city_deck"`
+	InfectionDeck InfectionDeck `json:"infection_deck"`
+}
+
 type InfectionDeck struct {
 	// TODO add cards drawn
 	// add probability of card redraw
@@ -21,8 +26,8 @@ type CityDeck struct {
 }
 
 type CityCard struct {
-	Name       string `json:"name"`
-	IsEpidemic bool   `json:"is_epidemic"`
+	City       City `json:"city"`
+	IsEpidemic bool `json:"is_epidemic"`
 }
 
 func (c CityDeck) cardsPerEpidemic() int {
