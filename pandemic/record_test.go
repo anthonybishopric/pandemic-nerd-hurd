@@ -14,11 +14,11 @@ func TestCardProbabilities(t *testing.T) {
 	}
 	deck.Drawn = []CityCard{
 		{
-			"San Francisco",
+			City{Name: "SanFrancisco"},
 			false,
 		},
 		{
-			"Sydney",
+			City{Name: "Sydney"},
 			false,
 		},
 	}
@@ -27,11 +27,13 @@ func TestCardProbabilities(t *testing.T) {
 	}
 	deck.Drawn = append(deck.Drawn,
 		CityCard{
-			"Epidemic!",
+			City{
+				Name: "Epidemic!",
+			},
 			true,
 		},
 		CityCard{
-			"Buenos Aires",
+			City{Name: "BuenosAires"},
 			false,
 		},
 	)
