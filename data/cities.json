@@ -1,0 +1,244 @@
+{
+    "cities": [
+        {
+            "name":    "SanFrancisco",
+            "disease": "Blue",
+            "neighbors": ["LosAngeles", "Tokyo", "Manila", "Chicago"]
+        },
+        {
+            "name":    "Washington",
+            "disease": "Blue",
+            "neighbors": ["Miami", "Atlanta", "Montreal", "NewYork"]
+        },
+        {
+            "name":    "Atlanta",
+            "disease": "Blue",
+            "neighbors": ["Chicago", "Washington", "Miami"]
+        },
+        {
+            "name":    "Montreal",
+            "disease": "Blue",
+            "neighbors": ["Chicago", "NewYork", "Washington"]
+        },
+        {
+            "name":    "Chicago",
+            "disease": "Blue",
+            "neighbors": ["Montreal", "Atlanta", "MexicoCity", "LosAngeles", "SanFrancisco"]
+        },
+        {
+            "name":    "NewYork",
+            "disease": "Blue",
+            "neighbors": ["Montreal", "Washington", "London", "Madrid"]
+        },
+        {
+            "name":    "London",
+            "disease": "Blue",
+            "neighbors": ["NewYork", "Essen", "Paris", "Madrid"]
+        },
+        {
+            "name":    "Essen",
+            "disease": "Blue",
+            "neighbors": ["London", "StPetersburg", "Milan", "Paris"]
+        },
+        {
+            "name":    "StPetersburg",
+            "disease": "Blue",
+            "neighbors": ["Essen", "Moscow", "Istanbul"]
+        },
+        {
+            "name":    "Milan",
+            "disease": "Blue",
+            "neighbors": ["Paris", "Essen", "Istanbul"]
+        },
+        {
+            "name":    "Paris",
+            "disease": "Blue",
+            "neighbors": ["Madrid", "London", "Essen", "Milan", "Algiers"]
+        },
+        {
+            "name":    "Madrid",
+            "disease": "Blue",
+            "neighbors": ["NewYork", "London", "Paris", "Algiers", "SaoPaulo"]
+        },
+        {
+            "name":    "LosAngeles",
+            "disease": "Yellow",
+            "neighbors": ["SanFrancisco", "Chicago", "MexicoCity", "Lima", "Sydney"]
+        },
+        {
+            "name":    "Miami",
+            "disease": "Yellow",
+            "neighbors": ["Atlanta", "Washington", "Bogota", "MexicoCity"]
+        },
+        {
+            "name":    "MexicoCity",
+            "disease": "Yellow",
+            "neighbors": ["LosAngeles", "Chicago", "Miami", "Bogota", "Lima"]
+        },
+        {
+            "name":    "Bogota",
+            "disease": "Yellow",
+            "neighbors": ["Miami", "SaoPaulo", "BuenosAires", "Lima", "MexicoCity"]
+        },
+        {
+            "name":    "Lima",
+            "disease": "Yellow",
+            "neighbors": ["LosAngeles", "MexicoCity", "Bogota", "Santiago"]
+        },
+        {
+            "name":    "Santiago",
+            "disease": "Yellow",
+            "neighbors": ["Lima", "BuenosAires"]
+        },
+        {
+            "name":    "SaoPaulo",
+            "disease": "Yellow",
+            "neighbors": ["BuenosAires", "Bogota", "Madrid", "Lagos"]
+        },
+        {
+            "name":    "BuenosAires",
+            "disease": "Yellow",
+            "neighbors": ["Santiago", "Bogota", "SaoPaulo", "Johannesburg"]
+        },
+        {
+            "name":    "Lagos",
+            "disease": "Yellow",
+            "neighbors": ["SaoPaulo", "Kinshasa", "Khartoum"]
+        },
+        {
+            "name":    "Khartoum",
+            "disease": "Yellow",
+            "neighbors": ["Johannesburg", "Kinshasa", "Lagos", "Cairo"]
+        },
+        {
+            "name":    "Kinshasa",
+            "disease": "Yellow",
+            "neighbors": ["Lagos", "Khartoum", "Johannesburg"]
+        },
+        {
+            "name":    "Johannesburg",
+            "disease": "Yellow",
+            "neighbors": ["BuenosAires", "Kinshasa", "Khartoum"]
+        },
+        {
+            "name":    "Algiers",
+            "disease": "Black",
+            "neighbors": ["Madrid", "Paris", "Istanbul", "Cairo"]
+        },
+        {
+            "name":    "Istanbul",
+            "disease": "Black",
+            "neighbors": ["Milan", "StPetersburg", "Moscow", "Baghdad", "Cairo", "Algiers"]
+        },
+        {
+            "name":    "Cairo",
+            "disease": "Black",
+            "neighbors": ["Algiers", "Istanbul", "Baghdad", "Riydah", "Khartoum"]
+        },
+        {
+            "name":    "Riydah",
+            "disease": "Black",
+            "neighbors": ["Cairo", "Baghdad", "Karachi"]
+        },
+        {
+            "name":    "Baghdad",
+            "disease": "Black",
+            "neighbors": ["Istanbul", "Tehran", "Riydah", "Cairo"]
+        },
+        {
+            "name":    "Moscow",
+            "disease": "Black",
+            "neighbors": ["StPetersburg", "Tehran", "Istanbul"]
+        },
+        {
+            "name":    "Tehran",
+            "disease": "Black",
+            "neighbors": ["Moscow", "Delhi", "Karachi", "Baghdad"]
+        },
+        {
+            "name":    "Delhi",
+            "disease": "Black",
+            "neighbors": ["Tehran", "Kolkata", "Chennai", "Mumbai", "Karachi"]
+        },
+        {
+            "name":    "Karachi",
+            "disease": "Black",
+            "neighbors": ["Riydah", "Tehran", "Delhi", "Mumbai"]
+        },
+        {
+            "name":    "Mumbai",
+            "disease": "Black",
+            "neighbors": ["Karachi", "Delhi", "Chennai"]
+        },
+        {
+            "name":    "Kolkata",
+            "disease": "Black",
+            "neighbors": ["Chennai", "Delhi", "HongKong", "Bangkok"]
+        },
+        {
+            "name":    "Chennai",
+            "disease": "Black",
+            "neighbors": ["Mumbai", "Delhi", "Kolkata", "Jakarta"]
+        },
+        {
+            "name":    "Beijing",
+            "disease": "Red",
+            "neighbors": ["Shanghai", "Seoul"]
+        },
+        {
+            "name":    "Seoul",
+            "disease": "Red",
+            "neighbors": ["Beijing", "Tokyo", "Shanghai"]
+        },
+        {
+            "name":    "Tokyo",
+            "disease": "Red",
+            "neighbors": ["Shanghai", "Seoul", "SanFrancisco", "Osaka"]
+        },
+        {
+            "name":    "Shanghai",
+            "disease": "Red",
+            "neighbors": ["Beijing", "Seoul", "Tokyo", "Taipei", "HongKong"]
+        },
+        {
+            "name":    "Taipei",
+            "disease": "Red",
+            "neighbors": ["Shanghai", "Osaka", "Manila", "HongKong"]
+        },
+        {
+            "name":    "Osaka",
+            "disease": "Red",
+            "neighbors": ["Taipei", "Tokyo"]
+        },
+        {
+            "name":    "Hong Kong",
+            "disease": "Red",
+            "neighbors": ["Bangkok", "Kolkata", "Shanghai", "Taipei", "Manila", "HoChiMinhCity"]
+        },
+        {
+            "name":    "Bangkok",
+            "disease": "Red",
+            "neighbors": ["Kolkata", "HongKong", "HoChiMinhCity", "Jakarta"]
+        },
+        {
+            "name":    "HoChiMinhCity",
+            "disease": "Red",
+            "neighbors": ["Jakarta", "Bangkok", "HongKong", "Manila"]
+        },
+        {
+            "name":    "Jakarta",
+            "disease": "Red",
+            "neighbors": ["Chennai", "Bangkok", "HoChiMinhCity", "Sydney"]
+        },
+        {
+            "name":    "Manila",
+            "disease": "Red",
+            "neighbors": ["HoChiMinhCity", "HongKong", "Taipei", "SanFrancisco", "Sydney"]
+        },
+        {
+            "name":    "Sydney",
+            "disease": "Red",
+            "neighbors": ["Jakarta", "Manila", "LosAngeles"]
+        }
+    ]
+}
