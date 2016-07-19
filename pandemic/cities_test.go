@@ -23,6 +23,3 @@ func TestLoadFromJSON(t *testing.T) {
 	}
 
 }
-
-func TestProbabilityOfCard(t *testing.T) {
-}
