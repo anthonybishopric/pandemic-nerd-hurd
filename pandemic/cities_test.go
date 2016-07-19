@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestNeighbors(t *testing.T) {
+func TestLoadFromJSON(t *testing.T) {
 
 	// Do IO
 	filename, _ := filepath.Abs("../data/cities.json")
@@ -21,7 +21,5 @@ func TestNeighbors(t *testing.T) {
 	if err := dec.Decode(&c); err != nil {
 		fmt.Errorf("Decode city: %v", err)
 	}
-
-	fmt.Println(AllCitiesWithDisease(c.Cities, Blue))
 
 }
