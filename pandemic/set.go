@@ -1,22 +1,35 @@
 package pandemic
 
-type Set map[string]bool
+type Set map[string]struct{}
 
 func Init(ks []string) Set {
 	s := Set{}
 	for _, k := range ks {
-		s[k] = true
+		s[k] = struct{}{}
 	}
 	return s
 }
 
 func (s Set) Contains(k string) bool {
-	return s[k] == true
+	_, ok := s[k]
+	return ok
 }
 
 func (s Set) Add(k string) Set {
-	s[k] = true
+	s[k] = struct{}{}
 	return s
+}
+
+func (s Set) Remove(k string) (Set, bool) {
+	if _, ok := s[k]; !ok {
+		return s, false
+	}
+	delete(s, k)
+	return s, true
+}
+
+func (s Set) Size() int {
+	return len(s)
 }
 
 func Intersection(s1 Set, s2 Set) Set {

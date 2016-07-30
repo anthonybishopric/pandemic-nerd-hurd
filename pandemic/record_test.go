@@ -7,34 +7,12 @@ import (
 func TestProbabilityOfDrawingAlreadyDrawnCard(t *testing.T) {
 
 	gs := GameState{
-		InfectionDeck: InfectionDeck{
-			Drawn: []InfectionCard{
-				InfectionCard{
-					Name: "SanFrancisco",
-				},
-			},
-		},
+		InfectionDeck: NewInfectionDeck([]string{"SanFrancisco", "Miami", "Washington"}),
 		InfectionRate: 3,
 	}
 
-	if prob := gs.ProbabilityOfCity("SanFrancisco"); prob != 0 {
-		t.Fatalf("Should have had a 0%% chance of SanFranciso, got %v", prob)
-	}
-
-}
-
-func TestProbabilityOfDrawingCardAtStart(t *testing.T) {
-
-	gs := GameState{
-		InfectionDeck: InfectionDeck{
-			Drawn: []InfectionCard{},
-		},
-		InfectionRate: 2,
-	}
-
-	// TODO(wjs) how 2 floating point
-	if prob := gs.ProbabilityOfCity("SomeCity"); prob != 0.04166666666666674 {
-		t.Fatalf("Should have had a 0%% chance of pulling random card with 3 picks, got %v", prob)
+	if prob := gs.ProbabilityOfCity("SanFrancisco"); prob != 1.0 {
+		t.Fatalf("Should have had a 100%% chance of SanFranciso, got %v", prob)
 	}
 
 }

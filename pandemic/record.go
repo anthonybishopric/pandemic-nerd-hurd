@@ -8,19 +8,10 @@ const EpidemicsPerGame = 5
 const NumInfectionCards = 48
 
 type GameState struct {
-	CityDeck      CityDeck      `json:"city_deck"`
-	InfectionDeck InfectionDeck `json:"infection_deck"`
-	InfectionRate int           `json:"infection_rate"`
+	CityDeck      CityDeck       `json:"city_deck"`
+	InfectionDeck *InfectionDeck `json:"infection_deck"`
+	InfectionRate int            `json:"infection_rate"`
 	Outbreaks     int
-}
-
-type InfectionDeck struct {
-	Drawn []InfectionCard
-	// add probability of card redraw
-}
-
-type InfectionCard struct {
-	Name string
 }
 
 type CityDeck struct {
@@ -73,26 +64,6 @@ func (c CityDeck) probabilityOfEpidemic() float64 {
 }
 
 func (gs GameState) ProbabilityOfCity(cn string) float64 {
-	// Has the city already been drawn?
-	for _, card := range gs.InfectionDeck.Drawn {
-		if card.Name == cn {
-			return 0.0
-		}
-	}
-
-	// How many cards are left?
-	cardsRemaining := NumInfectionCards - len(gs.InfectionDeck.Drawn)
-
-	// Probability of ANY of the infection cards being the City is equal to 1 minus the probabilty
-	// that *none* of the cards is the city card
-	//
-	// P(C) ~= P(!C)^numCardsRemaining
-	// Assuming 48 cards and infection rate = 4
-	// P(C) = (47/48)*(46/47)*(45/46)*(44/45)
-	probability := 1.0
-	for i := 0; i < gs.InfectionRate; i++ {
-		probability *= float64(cardsRemaining-1) / float64(cardsRemaining)
-		cardsRemaining -= 1
-	}
-	return 1 - probability
+	// TODO: multiply by risk of epidemic
+	return gs.InfectionDeck.ProbabilityOfDrawing(cn, gs.InfectionRate)
 }
