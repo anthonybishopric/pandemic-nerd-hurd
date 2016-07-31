@@ -1,6 +1,9 @@
 package pandemic
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"math"
 )
 
@@ -8,10 +11,34 @@ const EpidemicsPerGame = 5
 const NumInfectionCards = 48
 
 type GameState struct {
+	Cities        Cities         `json:"cities"`
 	CityDeck      CityDeck       `json:"city_deck"`
 	InfectionDeck *InfectionDeck `json:"infection_deck"`
 	InfectionRate int            `json:"infection_rate"`
-	Outbreaks     int
+	Outbreaks     int            `json:"outbreaks"`
+}
+
+func NewGame(citiesFile string) (*GameState, error) {
+	var cities Cities
+	data, err := ioutil.ReadFile(citiesFile)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read cities file at %v: %v", citiesFile, err)
+	}
+	err = json.Unmarshal(data, &cities)
+	if err != nil {
+		return nil, fmt.Errorf("Invalid cities JSON file at %v: %v", citiesFile, err)
+	}
+	cityDeck := CityDeck{}
+	cityDeck.Total = len(cities.Cities)
+
+	infectionDeck := NewInfectionDeck(cities.CityNames())
+	return &GameState{
+		Cities:        cities,
+		CityDeck:      cityDeck,
+		InfectionDeck: infectionDeck,
+		InfectionRate: 2,
+		Outbreaks:     0,
+	}, nil
 }
 
 type CityDeck struct {
@@ -57,13 +84,12 @@ func (c CityDeck) EpidemicsDrawn() int {
 func (c CityDeck) probabilityOfEpidemic() float64 {
 	currentPhase := int(math.Floor(float64(len(c.Drawn))/float64(c.cardsPerEpidemic())) + 0.5)
 	if currentPhase == c.EpidemicsDrawn() {
-		return 2 * 1.0 / float64(c.cardsPerEpidemic()-(len(c.Drawn)%c.cardsPerEpidemic()))
+		return 2.0 / float64(c.cardsPerEpidemic()-(len(c.Drawn)%c.cardsPerEpidemic()))
 	} else {
 		return 0
 	}
 }
 
 func (gs GameState) ProbabilityOfCity(cn string) float64 {
-	// TODO: multiply by risk of epidemic
 	return gs.InfectionDeck.ProbabilityOfDrawing(cn, gs.InfectionRate)
 }

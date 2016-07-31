@@ -5,7 +5,6 @@ import (
 )
 
 func TestProbabilityOfDrawingAlreadyDrawnCard(t *testing.T) {
-
 	gs := GameState{
 		InfectionDeck: NewInfectionDeck([]string{"SanFrancisco", "Miami", "Washington"}),
 		InfectionRate: 3,
@@ -14,7 +13,6 @@ func TestProbabilityOfDrawingAlreadyDrawnCard(t *testing.T) {
 	if prob := gs.ProbabilityOfCity("SanFrancisco"); prob != 1.0 {
 		t.Fatalf("Should have had a 100%% chance of SanFranciso, got %v", prob)
 	}
-
 }
 
 func TestCardProbabilities(t *testing.T) {

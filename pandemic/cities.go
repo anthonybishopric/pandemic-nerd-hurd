@@ -22,3 +22,11 @@ func AllCitiesWithDisease(Cities []City, disease DiseaseType) []City {
 	}
 	return cities
 }
+
+func (c Cities) CityNames() []string {
+	names := []string{}
+	for _, city := range c.Cities {
+		names = append(names, city.Name)
+	}
+	return names
+}
