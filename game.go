@@ -10,6 +10,8 @@ import (
 
 func main() {
 	logger := logrus.New()
+	fd, err := os.OpenFile("log.txt", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	logger.Out = fd
 	wd, _ := os.Getwd()
 
 	gameState, err := pandemic.NewGame(filepath.Join(wd, "data/cities.json")) // Parameterize

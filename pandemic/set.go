@@ -1,5 +1,8 @@
 package pandemic
 
+import (
+	"sort"
+)
 type Set map[string]struct{}
 
 func Init(ks []string) Set {
@@ -30,6 +33,15 @@ func (s Set) Remove(k string) (Set, bool) {
 
 func (s Set) Size() int {
 	return len(s)
+}
+
+func (s Set) Members() []string {
+	ret := []string{}
+	for k,_ := range s {
+		ret = append(ret, k)
+	}
+	sort.Strings(ret)
+	return ret
 }
 
 func Intersection(s1 Set, s2 Set) Set {

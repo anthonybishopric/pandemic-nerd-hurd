@@ -2,6 +2,7 @@ package pandemic
 
 import (
 	"fmt"
+	"strings"
 )
 
 type InfectionDeck struct {
@@ -16,7 +17,7 @@ type InfectionCard struct {
 func NewInfectionDeck(cities []string) *InfectionDeck {
 	firstStriation := Set{}
 	for _, city := range cities {
-		firstStriation.Add(city)
+		firstStriation.Add(strings.ToLower(city))
 	}
 	return &InfectionDeck{
 		Drawn:      Set{},
@@ -30,16 +31,17 @@ func (d *InfectionDeck) assertStriationCount() {
 	}
 }
 
-func (d *InfectionDeck) Draw(card string) error {
+func (d *InfectionDeck) Draw(cityName string) error {
+	cityName = strings.ToLower(cityName)
 	d.assertStriationCount()
 	for d.Striations[0].Size() == 0 {
 		d.Striations = d.Striations[1:]
 	}
 	d.assertStriationCount()
-	if _, ok := d.Striations[0].Remove(card); !ok {
-		return fmt.Errorf("Card %v is not present in the active striation - how the fuck did you draw this card?", card)
+	if _, ok := d.Striations[0].Remove(cityName); !ok {
+		return fmt.Errorf("Card %v is not present in the active striation - how the fuck did you draw this card?", cityName)
 	}
-	d.Drawn.Add(card)
+	d.Drawn.Add(cityName)
 	return nil
 }
 
