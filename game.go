@@ -1,28 +1,49 @@
 package main
 
 import (
-	"bufio"
 	"os"
-	"os/signal"
-	"syscall"
+	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/anthonybishopric/pandemic-nerd-hurd/pandemic"
 )
 
 func main() {
 	logger := logrus.New()
-	// TODO: load gamestate from argument
-	go func() {
-		signalCh := make(chan os.Signal, 2)
-		signal.Notify(signalCh, syscall.SIGTERM, os.Interrupt)
-		<-signalCh
-		logger.Println("Exiting") // TODO: save gamestate to file
-		os.Exit(0)
-	}()
+	wd, _ := os.Getwd()
 
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		line := scanner.Text()
-		logger.Println("Got " + line) // TODO: implement REPL
+	gameState, err := pandemic.NewGame(filepath.Join(wd, "data/cities.json")) // Parameterize
+	if err != nil {
+		logger.Fatal(err)
 	}
+	gameState.InfectionRate = 3
+
+	gameState.InfectionDeck.Draw("Cairo")
+	gameState.InfectionDeck.Draw("Cairo")
+	gameState.InfectionDeck.Draw("Bogota")
+	gameState.InfectionDeck.Draw("Santiago")
+	gameState.InfectionDeck.Draw("SanFrancisco")
+	gameState.InfectionDeck.Draw("Montreal")
+	gameState.InfectionDeck.Draw("London")
+	gameState.InfectionDeck.Draw("Tehran")
+	gameState.InfectionDeck.Draw("Beijing")
+	gameState.InfectionDeck.ShuffleDrawn()
+
+	gameState.InfectionDeck.Draw("Bogota")
+	gameState.InfectionDeck.Draw("SanFrancisco")
+	gameState.InfectionDeck.Draw("Santiago")
+	gameState.InfectionDeck.Draw("Montreal")
+	gameState.InfectionDeck.Draw("Tehran")
+	gameState.InfectionDeck.Draw("Beijing")
+
+	gameState.InfectionDeck.ShuffleDrawn()
+
+	gameState.InfectionDeck.Draw("Tehran")
+	gameState.InfectionDeck.Draw("Beijing")
+	gameState.InfectionDeck.Draw("Santiago")
+
+	gameState.InfectionDeck.ShuffleDrawn()
+
+	view := NewView(logger)
+	view.Start(gameState)
 }

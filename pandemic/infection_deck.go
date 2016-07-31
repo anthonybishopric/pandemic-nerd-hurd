@@ -6,7 +6,7 @@ import (
 
 type InfectionDeck struct {
 	Drawn      Set
-	striations []Set // all striations still present on the infection deck. the 0th is the top
+	Striations []Set // all Striations still present on the infection deck. the 0th is the top
 }
 
 type InfectionCard struct {
@@ -20,23 +20,23 @@ func NewInfectionDeck(cities []string) *InfectionDeck {
 	}
 	return &InfectionDeck{
 		Drawn:      Set{},
-		striations: []Set{firstStriation},
+		Striations: []Set{firstStriation},
 	}
 }
 
 func (d *InfectionDeck) assertStriationCount() {
-	if len(d.striations) < 1 {
-		panic("Unexpectedly didn't have any striations - was this game set up correctly?")
+	if len(d.Striations) < 1 {
+		panic("Unexpectedly didn't have any Striations - was this game set up correctly?")
 	}
 }
 
 func (d *InfectionDeck) Draw(card string) error {
 	d.assertStriationCount()
-	for d.striations[0].Size() == 0 {
-		d.striations = d.striations[1:]
+	for d.Striations[0].Size() == 0 {
+		d.Striations = d.Striations[1:]
 	}
 	d.assertStriationCount()
-	if _, ok := d.striations[0].Remove(card); !ok {
+	if _, ok := d.Striations[0].Remove(card); !ok {
 		return fmt.Errorf("Card %v is not present in the active striation - how the fuck did you draw this card?", card)
 	}
 	d.Drawn.Add(card)
@@ -45,7 +45,7 @@ func (d *InfectionDeck) Draw(card string) error {
 
 func (d *InfectionDeck) PullFromBottom(card string) error {
 	d.assertStriationCount()
-	bottomStriation := d.striations[len(d.striations)-1]
+	bottomStriation := d.Striations[len(d.Striations)-1]
 	if _, ok := bottomStriation.Remove(card); !ok {
 		return fmt.Errorf("Card %v should not be present in the bottom striation", card)
 	}
@@ -54,14 +54,14 @@ func (d *InfectionDeck) PullFromBottom(card string) error {
 }
 
 // We just prepend the currently drawn pile onto the front
-// of our deck striations. Then we reset drawn.
+// of our deck Striations. Then we reset drawn.
 func (d *InfectionDeck) ShuffleDrawn() {
-	d.striations = append([]Set{d.Drawn}, d.striations...)
+	d.Striations = append([]Set{d.Drawn}, d.Striations...)
 	d.Drawn = Set{}
 }
 
 func (d *InfectionDeck) CurrentStriationCount() int {
-	return d.striations[0].Size()
+	return d.Striations[0].Size()
 }
 
 func (d *InfectionDeck) DrawnCount() int {
@@ -84,21 +84,21 @@ func (d *InfectionDeck) ProbabilityOfDrawing(city string, infectionRate int) flo
 	// Assuming 10 cards in the striation and infection rate = 4
 	// P(C) = 1 - (9/10)*(8/9)*(7/8)*(6/7) = 1 - 6/10 = 40%
 	probability := 1.0
-	curStriationSize := dCopy.striations[0].Size()
+	curStriationSize := dCopy.Striations[0].Size()
 	for draw := 0; draw < infectionRate; draw++ {
 		// if we've run out of cards in this striation, pop and
 		// start using the next striation down.
 		for curStriationSize == 0 {
-			dCopy.striations = dCopy.striations[1:]
+			dCopy.Striations = dCopy.Striations[1:]
 			dCopy.assertStriationCount()
-			curStriationSize = dCopy.striations[0].Size()
+			curStriationSize = dCopy.Striations[0].Size()
 		}
 
 		// calculate the probability of drawing the given card
 		// based on it's presence in the current striation. If
 		// it is not present, the chance of not drawing the
 		// target card is 100%.
-		if dCopy.striations[0].Contains(city) {
+		if dCopy.Striations[0].Contains(city) {
 			probability *= float64(curStriationSize-1) / float64(curStriationSize)
 		}
 		// Reduce the count of cards we know will remain in this
