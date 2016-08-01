@@ -34,19 +34,19 @@ func (d *InfectionDeck) assertStriationCount() {
 func (d *InfectionDeck) Draw(cityName string) error {
 	cityName = strings.ToLower(cityName)
 	d.assertStriationCount()
-	for d.Striations[0].Size() == 0 {
-		d.Striations = d.Striations[1:]
-	}
-	d.assertStriationCount()
 	if _, ok := d.Striations[0].Remove(cityName); !ok {
 		return fmt.Errorf("Card %v is not present in the active striation - how the fuck did you draw this card?", cityName)
 	}
 	d.Drawn.Add(cityName)
+	for d.Striations[0].Size() == 0 {
+		d.Striations = d.Striations[1:]
+	}
 	return nil
 }
 
 func (d *InfectionDeck) PullFromBottom(card string) error {
 	d.assertStriationCount()
+	card = strings.ToLower(card)
 	bottomStriation := d.Striations[len(d.Striations)-1]
 	if _, ok := bottomStriation.Remove(card); !ok {
 		return fmt.Errorf("Card %v should not be present in the bottom striation", card)
@@ -71,6 +71,8 @@ func (d *InfectionDeck) DrawnCount() int {
 }
 
 func (d *InfectionDeck) ProbabilityOfDrawing(city string, infectionRate int) float64 {
+	city = strings.ToLower(city)
+
 	// Has the city already been drawn?
 	if d.Drawn.Contains(city) {
 		return 0.0
@@ -109,4 +111,8 @@ func (d *InfectionDeck) ProbabilityOfDrawing(city string, infectionRate int) flo
 	}
 
 	return 1 - probability
+}
+
+func (deck *InfectionDeck) DrawnContains(city string) bool {
+	return deck.Drawn.Contains(strings.ToLower(city))
 }

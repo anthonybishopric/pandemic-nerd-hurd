@@ -24,7 +24,7 @@ func TestInfectionDeckCountStriations(t *testing.T) {
 	if err := deck.Draw("SanFrancisco"); err != nil {
 		t.Fatalf("Did not expect error when drawing: %v", err)
 	}
-	if !deck.Drawn.Contains("SanFrancisco") {
+	if !deck.DrawnContains("SanFrancisco") {
 		t.Fatal("Expected the drawn deck to have san francisco")
 	}
 	if deck.CurrentStriationCount() != 4 {

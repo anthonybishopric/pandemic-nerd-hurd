@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/anthonybishopric/pandemic-nerd-hurd/pandemic"
@@ -40,8 +39,8 @@ func (p *PandemicView) Start(game *pandemic.GameState) {
 
 		p.renderCommandsView(game, gui, width)
 		p.renderStriations(game, gui, 2, height/2, width)
-		// p.renderTurnStatus(game, gui, 0, height/2+1, width/2, height)
-		p.renderConsoleArea(game, gui, width/2+1, height/2+1, width, height)
+		// p.renderTurnStatus(game, gui, 0, height/2, width/2, height)
+		p.renderConsoleArea(game, gui, width/2, height/2, width, height)
 
 		p.setUpKeyBindings(game, gui, "Commands")
 		gui.Cursor = true
@@ -95,8 +94,10 @@ func (p *PandemicView) setUpKeyBindings(game *pandemic.GameState, gui *gocui.Gui
 
 func (p *PandemicView) renderConsoleArea(game *pandemic.GameState, gui *gocui.Gui, topX, topY, bottomX, bottomY int) {
 	view, err := gui.SetView("Console", topX, topY, bottomX, bottomY)
+	view.Title = "Console"
 	p.terminateIfErr(err, "Could not set up console view", gui)
 	view.Wrap = true
+	view.Autoscroll = true
 }
 
 // Creates a series of columns, representing the current infection deck striations. Striations closer
@@ -104,9 +105,9 @@ func (p *PandemicView) renderConsoleArea(game *pandemic.GameState, gui *gocui.Gu
 // of being drawn.
 func (p *PandemicView) renderStriations(game *pandemic.GameState, gui *gocui.Gui, topY int, bottomY int, maxX int) error {
 	// We know there will never be more than 4 striations, not including drawn.
-	// Divide the horizontal space by 4 and make striations that width.
-	strWidth := int(math.Floor(float64(maxX) / 4.0))
-	p.logger.Infoln(fmt.Sprintf("%+v", len(game.InfectionDeck.Striations)))
+	// Divide the horizontal space by 5 and make striations that width. The 5th
+	// column will be the drawn column
+	strWidth := int(math.Floor(float64(maxX) / 5.0))
 
 	for i := len(game.InfectionDeck.Striations) - 1; i >= 0; i-- {
 		widthMultiplier := len(game.InfectionDeck.Striations) - i - 1
@@ -119,44 +120,62 @@ func (p *PandemicView) renderStriations(game *pandemic.GameState, gui *gocui.Gui
 		}
 		strView.Clear()
 		strView.Title = strName
-		for _,city := range cityNames {
-			probability := game.ProbabilityOfCity(city)
-
-			text := fmt.Sprintf("%v %.2f", city, probability)
-			if probability == 0.0 {
-				fmt.Fprintln(strView, p.colorAllGood(text))
-			} else if probability > 0.8 {
-				fmt.Fprintln(strView, p.colorOhFuck(text))
-			} else {
-				fmt.Fprintln(strView, p.colorWarning(text))
-			}
+		for _, city := range cityNames {
+			p.terminateIfErr(p.printCityWithProb(game, strView, city), "Could not render city", gui)
 		}
+	}
+	widthMultiplier := 4
+	drawnView, err := gui.SetView("Drawn", strWidth*widthMultiplier, topY, (widthMultiplier+1)*strWidth, bottomY)
+	if err != nil {
+		return err
+	}
+	drawnView.Clear()
+	drawnView.Title = "Drawn"
+	for _, city := range game.InfectionDeck.Drawn.Members() {
+		p.terminateIfErr(p.printCityWithProb(game, drawnView, city), "Could not render drawn card", gui)
 	}
 	return nil
 }
 
-func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *gocui.View, commandView *gocui.View) error {
-	commandBuffer := strings.Trim(commandView.Buffer(), "\n\t\r ")
-	if commandBuffer == "" {
-		return nil
+func (p *PandemicView) printCityWithProb(game *pandemic.GameState, view *gocui.View, city string) error {
+	cityData, err := game.GetCity(city)
+	if err != nil {
+		return err
 	}
+	// diseaseData, err := game.GetDiseaseData(cityData.Disease)
+	// if err != nil {
+	// 	return err
+	// }
+	probability := game.ProbabilityOfCity(city)
 
-	commandArgs := strings.Split(commandBuffer, " ")
-	cmd := commandArgs[0]
-	args := commandArgs[1]
-
-	switch cmd {
-	case "infect", "i":
-		err := gameState.InfectionDeck.Draw(args)
-		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
-		} else {
-			fmt.Fprintf(consoleView, "Infected %v\n", args)
-		}
+	var diseaseEmoji string
+	switch cityData.Disease {
+	case pandemic.Yellow.Type:
+		diseaseEmoji = "\U0001f49b"
+	case pandemic.Blue.Type:
+		diseaseEmoji = "\U0001f499"
+	case pandemic.Red.Type:
+		diseaseEmoji = "\u2764\ufe0f"
+	case pandemic.Black.Type:
+		diseaseEmoji = "\u26ab"
+	case pandemic.Faded.Type:
+		diseaseEmoji = "\U0001f608"
 	default:
-		fmt.Fprintf(consoleView, p.colorWarning(fmt.Sprintf("Unrecognized command %v\n", cmd)))
+		diseaseEmoji = string(cityData.Disease)
 	}
 
-	commandView.Clear()
+	infectionRateEmojis := ""
+	for i := 0; i < cityData.NumInfections; i++ {
+		infectionRateEmojis += "•"
+	}
+
+	text := fmt.Sprintf("%v %s  %s  %.2f", city, diseaseEmoji, infectionRateEmojis, probability)
+	if probability == 0.0 {
+		fmt.Fprintln(view, p.colorAllGood(text))
+	} else if probability > 0.8 || cityData.NumInfections == 3 {
+		fmt.Fprintln(view, p.colorOhFuck(text))
+	} else {
+		fmt.Fprintln(view, p.colorWarning(text))
+	}
 	return nil
 }

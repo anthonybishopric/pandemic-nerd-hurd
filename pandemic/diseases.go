@@ -1,56 +1,32 @@
 package pandemic
 
-import (
-	"encoding/json"
-	"fmt"
-)
+type DiseaseType string
 
-type DiseaseType struct {
-	Color         string `json:"color"`
-	Incurable     bool   `json:"incurable,omitempty"`
-	Untreatable   bool   `json:"untreatable,omitempty"`
-	BecomingFaded bool   `json:"becoming_faded,omitempty"`
-	HasZombies    bool
+type DiseaseData struct {
+	Type          DiseaseType `json:"type"`
+	Incurable     bool        `json:"incurable,omitempty"`
+	Untreatable   bool        `json:"untreatable,omitempty"`
+	BecomingFaded bool        `json:"becoming_faded,omitempty"`
 }
 
-func (dt *DiseaseType) UnmarshalJSON(data []byte) error {
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return fmt.Errorf("Disease Type should be a string, got %s", data)
-	}
-
-	got, ok := map[string]DiseaseType{
-		"Yellow": Yellow,
-		"Blue":   Blue,
-		"Red":    Red,
-		"Black":  Black,
-		"Faded":  Faded,
-	}[s]
-	if !ok {
-		return fmt.Errorf("invalid DiseaseType %q", s)
-	}
-	*dt = got
-	return nil
+var Yellow = DiseaseData{
+	Type: DiseaseType("Yellow"),
 }
-
-var Yellow = DiseaseType{
-	Color: "Yellow",
-}
-var Blue = DiseaseType{
-	Color:         "Blue",
+var Blue = DiseaseData{
+	Type:          DiseaseType("Blue"),
 	Incurable:     true, // TODO: make configurable with a gamestate
 	Untreatable:   true,
 	BecomingFaded: true,
 }
-var Red = DiseaseType{
-	Color: "Red",
+var Red = DiseaseData{
+	Type: DiseaseType("Red"),
 }
-var Black = DiseaseType{
-	Color: "Black",
+var Black = DiseaseData{
+	Type: DiseaseType("Black"),
 }
-var Faded = DiseaseType{
-	Color:       "Faded",
-	HasZombies:  true,
-	Incurable:   true,
-	Untreatable: true,
+var Faded = DiseaseData{
+	Type:          DiseaseType("Faded"),
+	Incurable:     true,
+	Untreatable:   true,
+	BecomingFaded: true,
 }

@@ -20,12 +20,7 @@ const (
 	Fallen
 )
 
-func (pl *PanicLevel) UnmarshalJSON(data []byte) error {
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return fmt.Errorf("panic level should be a string, got %s", data)
-	}
-
+func PanicLevelFromString(s string) (PanicLevel, error) {
 	got, ok := map[string]PanicLevel{
 		"Nothing":    Nothing,
 		"Unstable":   Unstable,
@@ -35,7 +30,39 @@ func (pl *PanicLevel) UnmarshalJSON(data []byte) error {
 		"Fallen":     Fallen,
 	}[s]
 	if !ok {
-		return fmt.Errorf("invalid PanicLevel %q", s)
+		return PanicLevel(-1), fmt.Errorf("invalid PanicLevel %q", s)
+	}
+	return got, nil
+}
+
+func (pl PanicLevel) String() string {
+	got, ok := map[PanicLevel]string{
+		Nothing:    "Nothing",
+		Unstable:   "Unstable",
+		Rioting2:   "Rioting2",
+		Rioting3:   "Rioting3",
+		Collapsing: "Collapsing",
+		Fallen:     "Fallen",
+	}[pl]
+	if !ok {
+		return ""
+	}
+	return got
+}
+
+func (pl *PanicLevel) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pl.String())
+}
+
+func (pl *PanicLevel) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return fmt.Errorf("panic level should be a string, got %s", data)
+	}
+
+	got, err := PanicLevelFromString(s)
+	if err != nil {
+		return err
 	}
 	*pl = got
 	return nil

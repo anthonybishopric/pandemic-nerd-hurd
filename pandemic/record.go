@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"strings"
 )
 
 const EpidemicsPerGame = 5
 const NumInfectionCards = 48
 
 type GameState struct {
-	Cities        Cities         `json:"cities"`
-	CityDeck      CityDeck       `json:"city_deck"`
+	Cities        *Cities        `json:"cities"`
+	CityDeck      *CityDeck      `json:"city_deck"`
+	DiseaseData   []DiseaseData  `json:"disease_data"`
 	InfectionDeck *InfectionDeck `json:"infection_deck"`
 	InfectionRate int            `json:"infection_rate"`
 	Outbreaks     int            `json:"outbreaks"`
@@ -33,8 +35,9 @@ func NewGame(citiesFile string) (*GameState, error) {
 
 	infectionDeck := NewInfectionDeck(cities.CityNames())
 	return &GameState{
-		Cities:        cities,
-		CityDeck:      cityDeck,
+		Cities:        &cities,
+		DiseaseData:   []DiseaseData{Yellow, Red, Black, Blue, Faded},
+		CityDeck:      &cityDeck,
 		InfectionDeck: infectionDeck,
 		InfectionRate: 2,
 		Outbreaks:     0,
@@ -92,4 +95,18 @@ func (c CityDeck) probabilityOfEpidemic() float64 {
 
 func (gs GameState) ProbabilityOfCity(cn string) float64 {
 	return gs.InfectionDeck.ProbabilityOfDrawing(cn, gs.InfectionRate)
+}
+
+func (gs *GameState) GetCity(city string) (*City, error) {
+	city = strings.ToLower(city)
+	return gs.Cities.GetCity(city)
+}
+
+func (gs *GameState) GetDiseaseData(diseaseType DiseaseType) (*DiseaseData, error) {
+	for _, data := range gs.DiseaseData {
+		if data.Type == diseaseType {
+			return &data, nil
+		}
+	}
+	return nil, fmt.Errorf("No disease identified by %v", diseaseType)
 }
