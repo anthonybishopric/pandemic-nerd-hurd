@@ -1,7 +1,6 @@
 package pandemic
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -29,8 +28,6 @@ func TestSetContains(t *testing.T) {
 	if c := s3.Contains("a"); c != true {
 		t.Fatalf("Should have contained %v got %v", "a", c)
 	}
-
-	fmt.Println(s3)
 }
 
 func TestSet_Members(t *testing.T) {
