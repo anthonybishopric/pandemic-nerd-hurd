@@ -6,45 +6,66 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/anthonybishopric/pandemic-nerd-hurd/pandemic"
+
+	"gopkg.in/alecthomas/kingpin.v2"
+)
+
+var (
+	app         = kingpin.New("pandemic–nerd-hurd", "Start a nerd herd game")
+	startCmd    = app.Command("start", "Start a new game")
+	startCities = app.Flag("cities-file", "The file containing initial data about Cities").Default("data/cities.json").ExistingFile()
+	startMonth  = app.Flag("month", "The name of the month in the game we are playing. If playing the second time in a month, add '2' after the name").Required().Enum(
+		"jan",
+		"feb",
+		"mar",
+		"apr",
+		"may",
+		"jun",
+		"jul",
+		"aug",
+		"sep",
+		"oct",
+		"nov",
+		"dec",
+		"jan2",
+		"feb2",
+		"mar2",
+		"apr2",
+		"may2",
+		"jun2",
+		"jul2",
+		"aug2",
+		"sep2",
+		"oct2",
+		"nov2",
+		"dec2",
+	)
+	loadCmd  = app.Command("load", "Load a game from an existing saved game")
+	loadFile = loadCmd.Flag("file", "The JSON file containing the game state").Required().ExistingFile()
 )
 
 func main() {
+	cmd := kingpin.MustParse(app.Parse(os.Args[1:]))
+
 	logger := logrus.New()
 	fd, err := os.OpenFile("log.txt", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	logger.Out = fd
 	wd, _ := os.Getwd()
 
-	gameState, err := pandemic.NewGame(filepath.Join(wd, "data/cities.json")) // Parameterize
-	if err != nil {
-		logger.Fatal(err)
+	var gameState *pandemic.GameState
+
+	switch cmd {
+	case "start":
+		gameState, err = pandemic.NewGame(filepath.Join(wd, *startCities), *startMonth)
+		if err != nil {
+			logger.Fatalln(err)
+		}
+	case "load":
+		gameState, err = pandemic.LoadGame(filepath.Join(wd, *loadFile))
+		if err != nil {
+			logger.Fatalln(err)
+		}
 	}
-	gameState.InfectionRate = 3
-
-	gameState.InfectionDeck.Draw("Cairo")
-	gameState.InfectionDeck.Draw("Cairo")
-	gameState.InfectionDeck.Draw("Bogota")
-	gameState.InfectionDeck.Draw("Santiago")
-	gameState.InfectionDeck.Draw("SanFrancisco")
-	gameState.InfectionDeck.Draw("Montreal")
-	gameState.InfectionDeck.Draw("London")
-	gameState.InfectionDeck.Draw("Tehran")
-	gameState.InfectionDeck.Draw("Beijing")
-	gameState.InfectionDeck.ShuffleDrawn()
-
-	gameState.InfectionDeck.Draw("Bogota")
-	gameState.InfectionDeck.Draw("SanFrancisco")
-	gameState.InfectionDeck.Draw("Santiago")
-	gameState.InfectionDeck.Draw("Montreal")
-	gameState.InfectionDeck.Draw("Tehran")
-	gameState.InfectionDeck.Draw("Beijing")
-
-	gameState.InfectionDeck.ShuffleDrawn()
-
-	gameState.InfectionDeck.Draw("Tehran")
-	gameState.InfectionDeck.Draw("Beijing")
-	gameState.InfectionDeck.Draw("Santiago")
-
-	gameState.InfectionDeck.ShuffleDrawn()
 
 	view := NewView(logger)
 	view.Start(gameState)

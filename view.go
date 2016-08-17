@@ -11,10 +11,11 @@ import (
 )
 
 type PandemicView struct {
-	logger       *logrus.Logger
-	colorAllGood func(...interface{}) string
-	colorWarning func(...interface{}) string
-	colorOhFuck  func(...interface{}) string
+	logger          *logrus.Logger
+	colorAllGood    func(...interface{}) string
+	colorWarning    func(...interface{}) string
+	colorOhFuck     func(...interface{}) string
+	fileSaveCounter int
 }
 
 func NewView(logger *logrus.Logger) *PandemicView {

@@ -1,9 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/anthonybishopric/pandemic-nerd-hurd/pandemic"
 	"github.com/jroimartin/gocui"
@@ -14,6 +19,8 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 	if commandBuffer == "" {
 		return nil
 	}
+
+	defer commandView.Clear()
 
 	commandArgs := strings.Split(commandBuffer, " ")
 	cmd := commandArgs[0]
@@ -87,8 +94,24 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 	case "city-draw", "c":
 	default:
 		fmt.Fprintf(consoleView, p.colorWarning(fmt.Sprintf("Unrecognized command %v\n", cmd)))
+		return nil
 	}
 
-	commandView.Clear()
+	filename := filepath.Join(gameState.GameName, fmt.Sprintf("game_%v_%v.json", time.Now().UnixNano(), cmd))
+	err := os.MkdirAll(gameState.GameName, 0755)
+	if err != nil {
+		fmt.Fprintf(consoleView, p.colorOhFuck(fmt.Sprintf("Could not create a game name folder: %v", err)))
+	}
+	data, err := json.Marshal(gameState)
+	if err != nil {
+		fmt.Fprintf(consoleView, p.colorOhFuck(fmt.Sprintf("Could not marshal gamestate as JSON: %v\n", err)))
+		return nil
+	}
+	err = ioutil.WriteFile(filename, data, 0644)
+	if err != nil {
+		fmt.Fprintf(consoleView, p.colorOhFuck(fmt.Sprintf("Could not save gamestate: %v\n", err)))
+		return nil
+	}
+
 	return nil
 }

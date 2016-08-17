@@ -133,19 +133,17 @@
         {
             "name":    "cairo",
             "disease": "Black",
-            "neighbors": ["algiers", "istanbul", "baghdad", "riydah", "khartoum"],
-            "num_infections": 2
-
+            "neighbors": ["algiers", "istanbul", "baghdad", "riyadh", "khartoum"]
         },
         {
-            "name":    "riydah",
+            "name":    "riyadh",
             "disease": "Black",
             "neighbors": ["cairo", "baghdad", "karachi"]
         },
         {
             "name":    "baghdad",
             "disease": "Black",
-            "neighbors": ["istanbul", "tehran", "riydah", "cairo"]
+            "neighbors": ["istanbul", "tehran", "riyadh", "cairo"]
         },
         {
             "name":    "moscow",
@@ -165,7 +163,7 @@
         {
             "name":    "karachi",
             "disease": "Black",
-            "neighbors": ["riydah", "tehran", "delhi", "mumbai"]
+            "neighbors": ["riyadh", "tehran", "delhi", "mumbai"]
         },
         {
             "name":    "mumbai",
@@ -213,7 +211,7 @@
             "neighbors": ["taipei", "tokyo"]
         },
         {
-            "name":    "hong kong",
+            "name":    "hongkong",
             "disease": "Red",
             "neighbors": ["bangkok", "kolkata", "shanghai", "taipei", "manila", "hochiminhcity"]
         },

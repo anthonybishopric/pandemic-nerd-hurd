@@ -18,9 +18,10 @@ type GameState struct {
 	InfectionDeck *InfectionDeck `json:"infection_deck"`
 	InfectionRate int            `json:"infection_rate"`
 	Outbreaks     int            `json:"outbreaks"`
+	GameName      string         `json:"game_name"`
 }
 
-func NewGame(citiesFile string) (*GameState, error) {
+func NewGame(citiesFile string, gameName string) (*GameState, error) {
 	var cities Cities
 	data, err := ioutil.ReadFile(citiesFile)
 	if err != nil {
@@ -41,7 +42,21 @@ func NewGame(citiesFile string) (*GameState, error) {
 		InfectionDeck: infectionDeck,
 		InfectionRate: 2,
 		Outbreaks:     0,
+		GameName:      gameName,
 	}, nil
+}
+
+func LoadGame(gameFile string) (*GameState, error) {
+	var gameState GameState
+	data, err := ioutil.ReadFile(gameFile)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &gameState)
+	if err != nil {
+		return nil, err
+	}
+	return &gameState, nil
 }
 
 type CityDeck struct {
