@@ -57,6 +57,10 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			fmt.Fprintln(consoleView, p.colorWarning(err))
 			break
 		} else {
+			err := gameState.CityDeck.DrawEpidemic()
+			if err != nil {
+				fmt.Fprintln(consoleView, p.colorWarning(err.Error()))
+			}
 			fmt.Fprintf(consoleView, "Epidemic in %v. Please update the infect rate (infect-rate N)\n", city)
 			cityData, _ := gameState.GetCity(city)
 			cityData.Epidemic()
@@ -92,6 +96,16 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 		city.SetInfections(int(il))
 		fmt.Fprintf(consoleView, "Set infection level in %v to %v\n", city.Name, city.NumInfections)
 	case "city-draw", "c":
+		if len(commandArgs) != 2 {
+			fmt.Fprintln(consoleView, p.colorWarning("You must pass a city value to draw\n"))
+			break
+		}
+		err := gameState.CityDeck.Draw(commandArgs[1])
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(err))
+			break
+		}
+		fmt.Fprintf(consoleView, "Drew %v from city deck\n", commandArgs[1])
 	default:
 		fmt.Fprintf(consoleView, p.colorWarning(fmt.Sprintf("Unrecognized command %v\n", cmd)))
 		return nil

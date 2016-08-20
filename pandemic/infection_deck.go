@@ -66,6 +66,16 @@ func (d *InfectionDeck) CurrentStriationCount() int {
 	return d.Striations[0].Size()
 }
 
+func (d *InfectionDeck) BottomStriation() Set {
+	d.assertStriationCount()
+	return d.Striations[len(d.Striations)-1]
+}
+
+func (d *InfectionDeck) TopStriation() Set {
+	d.assertStriationCount()
+	return d.Striations[0]
+}
+
 func (d *InfectionDeck) DrawnCount() int {
 	return d.Drawn.Size()
 }

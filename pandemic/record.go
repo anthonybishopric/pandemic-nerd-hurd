@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"strings"
 )
 
@@ -32,7 +31,7 @@ func NewGame(citiesFile string, gameName string) (*GameState, error) {
 		return nil, fmt.Errorf("Invalid cities JSON file at %v: %v", citiesFile, err)
 	}
 	cityDeck := CityDeck{}
-	cityDeck.Total = len(cities.Cities)
+	cityDeck.All = cities.CityCards(EpidemicsPerGame)
 
 	infectionDeck := NewInfectionDeck(cities.CityNames())
 	return &GameState{
@@ -59,57 +58,20 @@ func LoadGame(gameFile string) (*GameState, error) {
 	return &gameState, nil
 }
 
-type CityDeck struct {
-	Drawn []CityCard
-	Total int
-}
-
-type CityCard struct {
-	City       City
-	IsEpidemic bool `json:"is_epidemic"`
-}
-
-func (c CityDeck) cardsPerEpidemic() int {
-	return c.Total / EpidemicsPerGame
-}
-
-func (c CityDeck) EpidemicsDrawn() int {
-	count := 0
-	for _, card := range c.Drawn {
-		if card.IsEpidemic {
-			count++
-		}
-	}
-	return count
-}
-
-// 100 city cards, 5 epidemics
-// probability of drawing an epidemic on turn 0:
-//   1/20 + (1/19 * 19/20)
-//
-//   1/18 + (1/17 * 17/18)
-//
-// if an epidemic is drawn, then the probability
-// of an epidemic being drawn is 0 until the 10th turn.
-//
-// if no epidemic is drawn, the probability of drawing
-// an epidemic in the 10th turn is 1/2 + (1/1 * 1/2).
-//
-// on the 11th turn, the probability of the 21st and 22nd cards
-// being epidemics is
-// 1/20 + (1/19 * 19/20)
-//
-func (c CityDeck) probabilityOfEpidemic() float64 {
-	currentPhase := int(math.Floor(float64(len(c.Drawn))/float64(c.cardsPerEpidemic())) + 0.5)
-	if currentPhase == c.EpidemicsDrawn() {
-		return 2.0 / float64(c.cardsPerEpidemic()-(len(c.Drawn)%c.cardsPerEpidemic()))
-	} else {
-		return 0
-	}
-}
-
 func (gs GameState) ProbabilityOfCity(cn string) float64 {
-	return gs.InfectionDeck.ProbabilityOfDrawing(cn, gs.InfectionRate)
+	// P(epidemic)*P(pull from bottom or from infect drawn) + P(!epidemic)*P(infection deck draw)
+	pEpi := gs.CityDeck.probabilityOfEpidemic()
+	bottom := gs.InfectionDeck.BottomStriation()
+	var pEpiDraw float64
+	if bottom.Contains(cn) {
+		pEpiDraw = 1.0 / float64(bottom.Size())
+	} else if gs.InfectionDeck.Drawn.Contains(cn) {
+		pEpiDraw = float64(gs.InfectionRate) / (1.0 + float64(len(gs.InfectionDeck.Drawn)))
+	}
+
+	pNoEpiDraw := gs.InfectionDeck.ProbabilityOfDrawing(cn, gs.InfectionRate)
+	// fmt.Printf("%v*%v + %v*%v\n", pEpi, pEpiDraw, 1.0-pEpi, pNoEpiDraw)
+	return pEpi*pEpiDraw + (1.0-pEpi)*pNoEpiDraw
 }
 
 func (gs *GameState) GetCity(city string) (*City, error) {
