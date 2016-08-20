@@ -3,6 +3,7 @@ package pandemic
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 type CityDeck struct {
@@ -37,6 +38,23 @@ func (c *Cities) CityCards(epidemicCount int) []CityCard {
 		cards = append(cards, CityCard{City{}, true})
 	}
 	return cards
+}
+
+func (c *Cities) GetCityByPrefix(prefix string) (*City, error) {
+	var ret *City
+	for _, c := range c.Cities {
+		c := c
+		if strings.HasPrefix(c.Name, prefix) {
+			if ret != nil {
+				return nil, fmt.Errorf("'%v' is ambiguous", prefix)
+			}
+			ret = c
+		}
+	}
+	if ret == nil {
+		return nil, fmt.Errorf("%v is not a prefix for any city", prefix)
+	}
+	return ret, nil
 }
 
 func (c *Cities) GetCity(city string) (*City, error) {

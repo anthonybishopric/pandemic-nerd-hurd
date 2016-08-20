@@ -14,6 +14,14 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
+func getCityNameByPrefix(entry string, gs *pandemic.GameState) (string, error) {
+	city, err := gs.Cities.GetCityByPrefix(entry)
+	if err != nil {
+		return "", err
+	}
+	return city.Name, nil
+}
+
 func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *gocui.View, commandView *gocui.View) error {
 	commandBuffer := strings.Trim(commandView.Buffer(), "\n\t\r ")
 	if commandBuffer == "" {
@@ -31,8 +39,12 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			fmt.Fprintln(consoleView, p.colorWarning("You must pass a city to the infect command."))
 			break
 		}
-		city := commandArgs[1]
-		err := gameState.InfectionDeck.Draw(city)
+		city, err := getCityNameByPrefix(commandArgs[1], gameState)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(err))
+			break
+		}
+		err = gameState.InfectionDeck.Draw(city)
 		if err != nil {
 			fmt.Fprintln(consoleView, p.colorWarning(err))
 		} else {
@@ -51,8 +63,12 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			fmt.Fprintln(consoleView, p.colorWarning("You must pass a city to the epidemic command.\n"))
 			break
 		}
-		city := commandArgs[1]
-		err := gameState.InfectionDeck.PullFromBottom(city)
+		city, err := getCityNameByPrefix(commandArgs[1], gameState)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(err))
+			break
+		}
+		err = gameState.InfectionDeck.PullFromBottom(city)
 		if err != nil {
 			fmt.Fprintln(consoleView, p.colorWarning(err))
 			break
@@ -88,9 +104,14 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			fmt.Fprintf(consoleView, p.colorWarning(fmt.Sprintf("%v is not a valid infection level\n", commandArgs[1])))
 			break
 		}
-		city, err := gameState.GetCity(commandArgs[1])
+		cityName, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {
-			fmt.Fprintf(consoleView, p.colorWarning(fmt.Sprintf("Could not get city %v: %v\n", commandArgs[1], err)))
+			fmt.Fprintln(consoleView, p.colorWarning(err))
+			break
+		}
+		city, err := gameState.GetCity(cityName)
+		if err != nil {
+			fmt.Fprintf(consoleView, p.colorWarning(fmt.Sprintf("Could not get city %v: %v\n", cityName, err)))
 			break
 		}
 		city.SetInfections(int(il))
@@ -100,12 +121,17 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			fmt.Fprintln(consoleView, p.colorWarning("You must pass a city value to draw\n"))
 			break
 		}
-		err := gameState.CityDeck.Draw(commandArgs[1])
+		city, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {
 			fmt.Fprintln(consoleView, p.colorWarning(err))
 			break
 		}
-		fmt.Fprintf(consoleView, "Drew %v from city deck\n", commandArgs[1])
+		err = gameState.CityDeck.Draw(city)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(err))
+			break
+		}
+		fmt.Fprintf(consoleView, "Drew %v from city deck\n", city)
 	default:
 		fmt.Fprintf(consoleView, p.colorWarning(fmt.Sprintf("Unrecognized command %v\n", cmd)))
 		return nil
