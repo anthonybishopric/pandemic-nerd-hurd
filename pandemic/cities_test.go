@@ -23,3 +23,26 @@ func TestLoadFromJSON(t *testing.T) {
 	}
 
 }
+
+func TestSortByInfect(t *testing.T) {
+	cities := Cities{
+		Cities: []*City{
+			{
+				Name:          "a",
+				NumInfections: 2,
+			},
+			{
+				Name:          "b",
+				NumInfections: 3,
+			},
+			{
+				Name:          "c",
+				NumInfections: 1,
+			},
+		},
+	}
+	sorted := cities.SortByInfectionLevel([]string{"a", "b", "c"})
+	if len(sorted) != 3 || sorted[0] != "b" || sorted[1] != "a" || sorted[2] != "c" {
+		t.Fatalf("Incorrect order: %+v", sorted)
+	}
+}

@@ -3,6 +3,7 @@ package pandemic
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 )
 
@@ -28,6 +29,31 @@ type Cities struct {
 	Cities []*City `json:"cities"`
 }
 
+type byInfectionRate struct {
+	names  []string
+	cities *Cities
+}
+
+func (b byInfectionRate) Len() int { return len(b.names) }
+
+func (b byInfectionRate) Swap(i, j int) {
+	b.names[i], b.names[j] = b.names[j], b.names[i]
+}
+
+func (b byInfectionRate) Less(i, j int) bool {
+	nameI := b.names[i]
+	nameJ := b.names[j]
+	cityI, _ := b.cities.GetCity(nameI)
+	cityJ, _ := b.cities.GetCity(nameJ)
+	if cityI.NumInfections > cityJ.NumInfections {
+		return true
+	}
+	if cityI.NumInfections < cityJ.NumInfections {
+		return false
+	}
+	return strings.Compare(nameI, nameJ) < 0
+}
+
 // do we need to model city specializations?
 func (c *Cities) CityCards(epidemicCount int) []CityCard {
 	cards := []CityCard{}
@@ -38,6 +64,12 @@ func (c *Cities) CityCards(epidemicCount int) []CityCard {
 		cards = append(cards, CityCard{City{}, true})
 	}
 	return cards
+}
+
+func (c *Cities) SortByInfectionLevel(cities []string) []string {
+	sorted := &byInfectionRate{cities, c}
+	sort.Sort(sorted)
+	return sorted.names
 }
 
 func (c *Cities) GetCityByPrefix(prefix string) (*City, error) {

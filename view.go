@@ -121,6 +121,7 @@ func (p *PandemicView) renderStriations(game *pandemic.GameState, gui *gocui.Gui
 		}
 		strView.Clear()
 		strView.Title = strName
+		cityNames = game.Cities.SortByInfectionLevel(cityNames)
 		for _, city := range cityNames {
 			p.terminateIfErr(p.printCityWithProb(game, strView, city), "Could not render city", gui)
 		}
