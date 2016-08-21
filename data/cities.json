@@ -2,62 +2,62 @@
     "cities": [
         {
             "name":    "sanfrancisco",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["losangeles", "tokyo", "manila", "chicago"]
         },
         {
             "name":    "washington",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["miami", "atlanta", "montreal", "newyork"]
         },
         {
             "name":    "atlanta",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["chicago", "washington", "miami"]
         },
         {
             "name":    "montreal",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["chicago", "newyork", "washington"]
         },
         {
             "name":    "chicago",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["montreal", "atlanta", "mexicocity", "losangeles", "sanfrancisco"]
         },
         {
             "name":    "newyork",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["montreal", "washington", "london", "madrid"]
         },
         {
             "name":    "london",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["newyork", "essen", "paris", "madrid"]
         },
         {
             "name":    "essen",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["london", "stpetersburg", "milan", "paris"]
         },
         {
             "name":    "stpetersburg",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["essen", "moscow", "istanbul"]
         },
         {
             "name":    "milan",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["paris", "essen", "istanbul"]
         },
         {
             "name":    "paris",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["madrid", "london", "essen", "milan", "algiers"]
         },
         {
             "name":    "madrid",
-            "disease": "Blue",
+            "disease": "Faded",
             "neighbors": ["newyork", "london", "paris", "algiers", "saopaulo"]
         },
         {
@@ -127,7 +127,7 @@
         },
         {
             "name":    "istanbul",
-            "disease": "Black",
+            "disease": "Faded",
             "neighbors": ["milan", "stpetersburg", "moscow", "baghdad", "cairo", "algiers"]
         },
         {
@@ -147,7 +147,7 @@
         },
         {
             "name":    "moscow",
-            "disease": "Black",
+            "disease": "Faded",
             "neighbors": ["stpetersburg", "tehran", "istanbul"]
         },
         {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/anthonybishopric/pandemic-nerd-hurd/pandemic"
@@ -63,6 +64,7 @@ func (p *PandemicView) renderCommandsView(game *pandemic.GameState, gui *gocui.G
 		p.logger.Fatalf("Could not render command view")
 	}
 	commandView.Editable = true
+	commandView.Autoscroll = false
 	commandView.Title = "Commands"
 }
 
@@ -89,6 +91,24 @@ func (p *PandemicView) setUpKeyBindings(game *pandemic.GameState, gui *gocui.Gui
 			return nil
 		}
 		return p.runCommand(game, consoleView, view)
+	})
+	err = gui.SetKeybinding(commandView, gocui.KeyTab, gocui.ModNone, func(gui *gocui.Gui, view *gocui.View) error {
+		cleanBuffer := strings.Trim(view.Buffer(), "\n\t\r ")
+		if cleanBuffer == "" {
+			return nil
+		}
+		words := strings.Split(cleanBuffer, " ")
+		prefix := words[len(words)-1]
+		city, err := game.Cities.GetCityByPrefix(prefix)
+		if err != nil {
+			return nil
+		}
+		words[len(words)-1] = city.Name
+		x, y := view.Cursor()
+		view.Clear()
+		fmt.Fprint(view, strings.Join(words, " "))
+		view.SetCursor(x+len(city.Name)-len(prefix), y)
+		return nil
 	})
 	p.terminateIfErr(err, "could not establish keybinding for command view", gui)
 }

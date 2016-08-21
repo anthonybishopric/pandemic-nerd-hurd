@@ -27,7 +27,7 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 	if commandBuffer == "" {
 		return nil
 	}
-
+	defer commandView.SetCursor(commandView.Origin())
 	defer commandView.Clear()
 
 	commandArgs := strings.Split(commandBuffer, " ")
