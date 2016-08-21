@@ -191,7 +191,12 @@ func (p *PandemicView) printCityWithProb(game *pandemic.GameState, view *gocui.V
 		infectionRateEmojis += "•"
 	}
 
-	text := fmt.Sprintf("%v %s  %s  %.2f", city, diseaseEmoji, infectionRateEmojis, probability)
+	quarantinedEmoji := ""
+	if cityData.Quarantined {
+		quarantinedEmoji = "\u26d4"
+	}
+
+	text := fmt.Sprintf("%v %s  %s  %s  %.2f", city[:3], diseaseEmoji, infectionRateEmojis, quarantinedEmoji, probability)
 	if probability == 0.0 {
 		fmt.Fprintln(view, p.colorAllGood(text))
 	} else if game.CanOutbreak(city) {

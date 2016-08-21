@@ -44,19 +44,11 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			fmt.Fprintln(consoleView, p.colorWarning(err))
 			break
 		}
-		err = gameState.InfectionDeck.Draw(city)
+		err = gameState.Infect(city)
 		if err != nil {
 			fmt.Fprintln(consoleView, p.colorWarning(err))
 		} else {
-			cityData, err := gameState.GetCity(city)
-			if err != nil {
-				panic(fmt.Sprintf("%v present in infection deck but not game state cities", city))
-			}
-			if cityData.Infect() {
-				fmt.Fprintf(consoleView, p.colorOhFuck(fmt.Sprintf("Infected and outbroke %v\n", city)))
-			} else {
-				fmt.Fprintf(consoleView, "Infected %v\n", city)
-			}
+			fmt.Fprintf(consoleView, "Infected %v\n", city)
 		}
 	case "epidemic", "e":
 		if len(commandArgs) != 2 {
@@ -68,20 +60,13 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			fmt.Fprintln(consoleView, p.colorWarning(err))
 			break
 		}
-		err = gameState.InfectionDeck.PullFromBottom(city)
+		err = gameState.Epidemic(city)
 		if err != nil {
 			fmt.Fprintln(consoleView, p.colorWarning(err))
 			break
 		} else {
-			err := gameState.CityDeck.DrawEpidemic()
-			if err != nil {
-				fmt.Fprintln(consoleView, p.colorWarning(err.Error()))
-			}
 			fmt.Fprintf(consoleView, "Epidemic in %v. Please update the infect rate (infect-rate N)\n", city)
-			cityData, _ := gameState.GetCity(city)
-			cityData.Epidemic()
 		}
-		gameState.InfectionDeck.ShuffleDrawn()
 	case "infect-rate", "r":
 		if len(commandArgs) != 2 {
 			fmt.Fprintln(consoleView, p.colorWarning("You must pass an integer value to the infect rate\n"))
@@ -132,6 +117,36 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			break
 		}
 		fmt.Fprintf(consoleView, "Drew %v from city deck\n", city)
+	case "quarantine", "q":
+		if len(commandArgs) != 2 {
+			fmt.Fprintf(consoleView, p.colorWarning("quarantine must be called with a city name"))
+		}
+		cityName, err := getCityNameByPrefix(commandArgs[1], gameState)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(err))
+			break
+		}
+		err = gameState.Quarantine(cityName)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(fmt.Sprintf("Could not quarantine %v: %v", cityName, err)))
+		} else {
+			fmt.Fprintf(consoleView, "Quarantined %v\n", cityName)
+		}
+	case "remove-quarantine", "rq":
+		if len(commandArgs) != 2 {
+			fmt.Fprintf(consoleView, p.colorWarning("remove-quarantine must be called with a city name"))
+		}
+		cityName, err := getCityNameByPrefix(commandArgs[1], gameState)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(err))
+			break
+		}
+		err = gameState.RemoveQuarantine(cityName)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(fmt.Sprintf("Could not remove quarantine from %v: %v", cityName, err)))
+		} else {
+			fmt.Fprintf(consoleView, "Removed quarantine from %v\n", cityName)
+		}
 	default:
 		fmt.Fprintf(consoleView, p.colorWarning(fmt.Sprintf("Unrecognized command %v\n", cmd)))
 		return nil

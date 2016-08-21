@@ -58,7 +58,78 @@ func LoadGame(gameFile string) (*GameState, error) {
 	return &gameState, nil
 }
 
+func (gs GameState) Infect(cn string) error {
+	err := gs.InfectionDeck.Draw(cn)
+	if err != nil {
+		return err
+	}
+	city, err := gs.Cities.GetCity(cn)
+	if err != nil {
+		return err
+	}
+	// TODO: hanlde if quarantine specialist is present
+	if city.Quarantined {
+		city.RemoveQuarantine()
+		return nil
+	}
+	// TODO: handle outbreaks
+	city.Infect()
+	return nil
+}
+
+func (gs GameState) Epidemic(cn string) error {
+	err := gs.InfectionDeck.PullFromBottom(cn)
+	if err != nil {
+		return err
+	}
+	err = gs.CityDeck.DrawEpidemic()
+	if err != nil {
+		return err
+	}
+	city, _ := gs.Cities.GetCity(cn)
+	// TODO: handle if quarantine specialist is present
+	if city.Quarantined {
+		city.RemoveQuarantine()
+		return nil
+	}
+	// TODO: handle outbreak
+	city.Epidemic()
+	gs.InfectionDeck.ShuffleDrawn()
+	return nil
+}
+
+func (gs GameState) Quarantine(cn string) error {
+	city, err := gs.Cities.GetCity(cn)
+	if err != nil {
+		return err
+	}
+	if city.Quarantined {
+		return fmt.Errorf("%v is already quarantined", cn)
+	}
+	city.Quarantine()
+	return nil
+}
+
+func (gs GameState) RemoveQuarantine(cn string) error {
+	city, err := gs.Cities.GetCity(cn)
+	if err != nil {
+		return err
+	}
+	if !city.Quarantined {
+		return fmt.Errorf("%v is not quarantined ", cn)
+	}
+	city.RemoveQuarantine()
+	return nil
+}
+
 func (gs GameState) ProbabilityOfCity(cn string) float64 {
+	city, err := gs.Cities.GetCity(cn)
+	if err != nil {
+		return 0.0
+	}
+	if city.Quarantined {
+		return 0.0
+	}
 	// P(epidemic)*P(pull from bottom or from infect drawn) + P(!epidemic)*P(infection deck draw)
 	pEpi := gs.CityDeck.probabilityOfEpidemic()
 	bottom := gs.InfectionDeck.BottomStriation()

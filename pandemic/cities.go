@@ -23,6 +23,7 @@ type City struct {
 	PanicLevel    PanicLevel  `json:"panic_level"`
 	Neighbors     []string    `json:"neighbors"`
 	NumInfections int         `json:"num_infections"`
+	Quarantined   bool        `json:"quarantined"`
 }
 
 type Cities struct {
@@ -126,6 +127,14 @@ func (c *City) Infect() bool {
 
 func (c *City) Epidemic() {
 	c.NumInfections = 3
+}
+
+func (c *City) Quarantine() {
+	c.Quarantined = true
+}
+
+func (c *City) RemoveQuarantine() {
+	c.Quarantined = false
 }
 
 func (c *City) SetInfections(infections int) {
