@@ -2,7 +2,6 @@ package pandemic
 
 import (
 	"fmt"
-	"strings"
 )
 
 type InfectionDeck struct {
@@ -14,10 +13,10 @@ type InfectionCard struct {
 	Name string
 }
 
-func NewInfectionDeck(cities []string) *InfectionDeck {
+func NewInfectionDeck(cities []CityName) *InfectionDeck {
 	firstStriation := Set{}
 	for _, city := range cities {
-		firstStriation.Add(strings.ToLower(city))
+		firstStriation.Add(city)
 	}
 	return &InfectionDeck{
 		Drawn:      Set{},
@@ -31,8 +30,7 @@ func (d *InfectionDeck) assertStriationCount() {
 	}
 }
 
-func (d *InfectionDeck) Draw(cityName string) error {
-	cityName = strings.ToLower(cityName)
+func (d *InfectionDeck) Draw(cityName CityName) error {
 	d.assertStriationCount()
 	if _, ok := d.Striations[0].Remove(cityName); !ok {
 		return fmt.Errorf("Card %v is not present in the active striation - how the fuck did you draw this card?", cityName)
@@ -44,9 +42,27 @@ func (d *InfectionDeck) Draw(cityName string) error {
 	return nil
 }
 
-func (d *InfectionDeck) PullFromBottom(card string) error {
+func (d *InfectionDeck) CitiesInStriation(strIndx int) []CityName {
+	striation := d.Striations[strIndx]
+	members := striation.Members()
+	cityNames := make([]CityName, len(members))
+	for i, member := range members {
+		cityNames[i] = CityName(member.String())
+	}
+	return cityNames
+}
+
+func (d *InfectionDeck) CitiesInDrawn() []CityName {
+	members := d.Drawn.Members()
+	cityNames := make([]CityName, len(members))
+	for i, member := range members {
+		cityNames[i] = CityName(member.String())
+	}
+	return cityNames
+}
+
+func (d *InfectionDeck) PullFromBottom(card CityName) error {
 	d.assertStriationCount()
-	card = strings.ToLower(card)
 	bottomStriation := d.Striations[len(d.Striations)-1]
 	if _, ok := bottomStriation.Remove(card); !ok {
 		return fmt.Errorf("Card %v should not be present in the bottom striation", card)
@@ -80,9 +96,7 @@ func (d *InfectionDeck) DrawnCount() int {
 	return d.Drawn.Size()
 }
 
-func (d *InfectionDeck) ProbabilityOfDrawing(city string, infectionRate int) float64 {
-	city = strings.ToLower(city)
-
+func (d *InfectionDeck) ProbabilityOfDrawing(city CityName, infectionRate int) float64 {
 	// Has the city already been drawn?
 	if d.Drawn.Contains(city) {
 		return 0.0
@@ -123,6 +137,6 @@ func (d *InfectionDeck) ProbabilityOfDrawing(city string, infectionRate int) flo
 	return 1 - probability
 }
 
-func (deck *InfectionDeck) DrawnContains(city string) bool {
-	return deck.Drawn.Contains(strings.ToLower(city))
+func (deck *InfectionDeck) DrawnContains(city CityName) bool {
+	return deck.Drawn.Contains(city)
 }

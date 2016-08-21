@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+type CityName string
+
+func (c CityName) String() string {
+	return string(c)
+}
+
 type CityDeck struct {
 	Drawn []CityCard
 	All   []CityCard
@@ -18,7 +24,7 @@ type CityCard struct {
 }
 
 type City struct {
-	Name          string      `json:"name"`
+	Name          CityName    `json:"name"`
 	Disease       DiseaseType `json:"disease"`
 	PanicLevel    PanicLevel  `json:"panic_level"`
 	Neighbors     []string    `json:"neighbors"`
@@ -31,7 +37,7 @@ type Cities struct {
 }
 
 type byInfectionRate struct {
-	names  []string
+	names  []CityName
 	cities *Cities
 }
 
@@ -52,7 +58,7 @@ func (b byInfectionRate) Less(i, j int) bool {
 	if cityI.NumInfections < cityJ.NumInfections {
 		return false
 	}
-	return strings.Compare(nameI, nameJ) < 0
+	return strings.Compare(string(nameI), string(nameJ)) < 0
 }
 
 // do we need to model city specializations?
@@ -67,7 +73,7 @@ func (c *Cities) CityCards(epidemicCount int) []CityCard {
 	return cards
 }
 
-func (c *Cities) SortByInfectionLevel(cities []string) []string {
+func (c *Cities) SortByInfectionLevel(cities []CityName) []CityName {
 	sorted := &byInfectionRate{cities, c}
 	sort.Sort(sorted)
 	return sorted.names
@@ -77,7 +83,7 @@ func (c *Cities) GetCityByPrefix(prefix string) (*City, error) {
 	var ret *City
 	for _, c := range c.Cities {
 		c := c
-		if strings.HasPrefix(c.Name, prefix) {
+		if strings.HasPrefix(strings.ToLower(string(c.Name)), strings.ToLower(prefix)) {
 			if ret != nil {
 				return nil, fmt.Errorf("'%v' is ambiguous", prefix)
 			}
@@ -90,9 +96,9 @@ func (c *Cities) GetCityByPrefix(prefix string) (*City, error) {
 	return ret, nil
 }
 
-func (c *Cities) GetCity(city string) (*City, error) {
+func (c *Cities) GetCity(city CityName) (*City, error) {
 	for _, c := range c.Cities {
-		if c.Name == city {
+		if c.Name == CityName(city) {
 			return c, nil
 		}
 	}
@@ -109,8 +115,8 @@ func (c Cities) WithDisease(disease DiseaseType) []*City {
 	return cities
 }
 
-func (c Cities) CityNames() []string {
-	names := []string{}
+func (c Cities) CityNames() []CityName {
+	names := []CityName{}
 	for _, city := range c.Cities {
 		names = append(names, city.Name)
 	}
@@ -170,7 +176,7 @@ func (c *CityDeck) EpidemicsDrawn() int {
 	return count
 }
 
-func (c *CityDeck) Draw(cn string) error {
+func (c *CityDeck) Draw(cn CityName) error {
 	for _, card := range c.Drawn {
 		if card.City.Name == cn {
 			return fmt.Errorf("%v has already been drawn from the city deck", cn)

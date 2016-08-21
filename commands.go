@@ -14,7 +14,7 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-func getCityNameByPrefix(entry string, gs *pandemic.GameState) (string, error) {
+func getCityNameByPrefix(entry string, gs *pandemic.GameState) (pandemic.CityName, error) {
 	city, err := gs.Cities.GetCityByPrefix(entry)
 	if err != nil {
 		return "", err

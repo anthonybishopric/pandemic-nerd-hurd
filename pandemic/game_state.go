@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strings"
 )
 
 const EpidemicsPerGame = 5
@@ -58,7 +57,7 @@ func LoadGame(gameFile string) (*GameState, error) {
 	return &gameState, nil
 }
 
-func (gs GameState) Infect(cn string) error {
+func (gs GameState) Infect(cn CityName) error {
 	err := gs.InfectionDeck.Draw(cn)
 	if err != nil {
 		return err
@@ -77,7 +76,7 @@ func (gs GameState) Infect(cn string) error {
 	return nil
 }
 
-func (gs GameState) Epidemic(cn string) error {
+func (gs GameState) Epidemic(cn CityName) error {
 	err := gs.InfectionDeck.PullFromBottom(cn)
 	if err != nil {
 		return err
@@ -98,7 +97,7 @@ func (gs GameState) Epidemic(cn string) error {
 	return nil
 }
 
-func (gs GameState) Quarantine(cn string) error {
+func (gs GameState) Quarantine(cn CityName) error {
 	city, err := gs.Cities.GetCity(cn)
 	if err != nil {
 		return err
@@ -110,7 +109,7 @@ func (gs GameState) Quarantine(cn string) error {
 	return nil
 }
 
-func (gs GameState) RemoveQuarantine(cn string) error {
+func (gs GameState) RemoveQuarantine(cn CityName) error {
 	city, err := gs.Cities.GetCity(cn)
 	if err != nil {
 		return err
@@ -122,7 +121,7 @@ func (gs GameState) RemoveQuarantine(cn string) error {
 	return nil
 }
 
-func (gs GameState) ProbabilityOfCity(cn string) float64 {
+func (gs GameState) ProbabilityOfCity(cn CityName) float64 {
 	city, err := gs.Cities.GetCity(cn)
 	if err != nil {
 		return 0.0
@@ -145,7 +144,7 @@ func (gs GameState) ProbabilityOfCity(cn string) float64 {
 	return pEpi*pEpiDraw + (1.0-pEpi)*pNoEpiDraw
 }
 
-func (gs GameState) CanOutbreak(cn string) bool {
+func (gs GameState) CanOutbreak(cn CityName) bool {
 	city, err := gs.Cities.GetCity(cn)
 	if err != nil {
 		return false
@@ -160,8 +159,7 @@ func (gs GameState) CanOutbreak(cn string) bool {
 	return city.NumInfections == 3 || gs.InfectionDeck.BottomStriation().Contains(cn)
 }
 
-func (gs *GameState) GetCity(city string) (*City, error) {
-	city = strings.ToLower(city)
+func (gs *GameState) GetCity(city CityName) (*City, error) {
 	return gs.Cities.GetCity(city)
 }
 

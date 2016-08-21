@@ -9,7 +9,7 @@ import (
 func getNumCards(count int, numEpis int) []CityCard {
 	cards := make([]CityCard, count)
 	for x := 0; x < count-numEpis; x++ {
-		cards[x] = CityCard{City{Name: fmt.Sprintf("testCity%v", x)}, false}
+		cards[x] = CityCard{City{Name: CityName(fmt.Sprintf("testCity%v", x))}, false}
 	}
 	for x := 0; x < numEpis; x++ {
 		cards[x] = CityCard{City{}, true}
@@ -205,7 +205,7 @@ func TestRunInfectTests(t *testing.T) {
 
 		// TEST
 		for city, expected := range infectTest.infectProbabilities {
-			prob := gs.ProbabilityOfCity(city)
+			prob := gs.ProbabilityOfCity(CityName(city))
 			actual := math.Floor(prob*100) / 100.0
 			if actual != expected {
 				t.Errorf("In scenario '%v', %v did not have expected probability: wanted %v, got %v\n", infectTest.scenario, city, expected, actual)

@@ -41,7 +41,7 @@ func TestSortByInfect(t *testing.T) {
 			},
 		},
 	}
-	sorted := cities.SortByInfectionLevel([]string{"a", "b", "c"})
+	sorted := cities.SortByInfectionLevel([]CityName{"a", "b", "c"})
 	if len(sorted) != 3 || sorted[0] != "b" || sorted[1] != "a" || sorted[2] != "c" {
 		t.Fatalf("Incorrect order: %+v", sorted)
 	}

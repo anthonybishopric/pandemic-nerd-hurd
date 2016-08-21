@@ -103,11 +103,11 @@ func (p *PandemicView) setUpKeyBindings(game *pandemic.GameState, gui *gocui.Gui
 		if err != nil {
 			return nil
 		}
-		words[len(words)-1] = city.Name
+		words[len(words)-1] = city.Name.String()
 		x, y := view.Cursor()
 		view.Clear()
 		fmt.Fprint(view, strings.Join(words, " "))
-		view.SetCursor(x+len(city.Name)-len(prefix), y)
+		view.SetCursor(x+len(city.Name.String())-len(prefix), y)
 		return nil
 	})
 	p.terminateIfErr(err, "could not establish keybinding for command view", gui)
@@ -132,8 +132,7 @@ func (p *PandemicView) renderStriations(game *pandemic.GameState, gui *gocui.Gui
 
 	for i := len(game.InfectionDeck.Striations) - 1; i >= 0; i-- {
 		widthMultiplier := len(game.InfectionDeck.Striations) - i - 1
-		striation := game.InfectionDeck.Striations[i]
-		cityNames := striation.Members()
+		cityNames := game.InfectionDeck.CitiesInStriation(i)
 		strName := fmt.Sprintf("Striation %v", i)
 		strView, err := gui.SetView(strName, strWidth*widthMultiplier, topY, (widthMultiplier+1)*strWidth, bottomY)
 		if err != nil {
@@ -153,13 +152,13 @@ func (p *PandemicView) renderStriations(game *pandemic.GameState, gui *gocui.Gui
 	}
 	drawnView.Clear()
 	drawnView.Title = "Drawn"
-	for _, city := range game.InfectionDeck.Drawn.Members() {
+	for _, city := range game.InfectionDeck.CitiesInDrawn() {
 		p.terminateIfErr(p.printCityWithProb(game, drawnView, city), "Could not render drawn card", gui)
 	}
 	return nil
 }
 
-func (p *PandemicView) printCityWithProb(game *pandemic.GameState, view *gocui.View, city string) error {
+func (p *PandemicView) printCityWithProb(game *pandemic.GameState, view *gocui.View, city pandemic.CityName) error {
 	cityData, err := game.GetCity(city)
 	if err != nil {
 		return err
@@ -196,7 +195,7 @@ func (p *PandemicView) printCityWithProb(game *pandemic.GameState, view *gocui.V
 		quarantinedEmoji = "\u26d4"
 	}
 
-	text := fmt.Sprintf("%v %s  %s  %s  %.2f", city[:3], diseaseEmoji, infectionRateEmojis, quarantinedEmoji, probability)
+	text := fmt.Sprintf("%v %s  %s  %s  %.2f", city[:4], diseaseEmoji, infectionRateEmojis, quarantinedEmoji, probability)
 	if probability == 0.0 {
 		fmt.Fprintln(view, p.colorAllGood(text))
 	} else if game.CanOutbreak(city) {

@@ -6,7 +6,7 @@ import (
 )
 
 func testInfectionDeck() *InfectionDeck {
-	return NewInfectionDeck([]string{
+	return NewInfectionDeck([]CityName{
 		"SanFrancisco",
 		"NewYork",
 		"Montreal",
@@ -35,7 +35,7 @@ func TestInfectionDeckCountStriations(t *testing.T) {
 
 func checkProbability(t *testing.T, deck *InfectionDeck, city string, infectRate int, expected float64) {
 	// round to hundredths for the comparison
-	actual := deck.ProbabilityOfDrawing(city, infectRate)
+	actual := deck.ProbabilityOfDrawing(CityName(city), infectRate)
 	actualRounded := math.Floor(actual*100) / 100.0
 	expectedRounded := math.Floor(expected*100) / 100.0
 	if expectedRounded != actualRounded {
