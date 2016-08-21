@@ -74,6 +74,21 @@ func (gs GameState) ProbabilityOfCity(cn string) float64 {
 	return pEpi*pEpiDraw + (1.0-pEpi)*pNoEpiDraw
 }
 
+func (gs GameState) CanOutbreak(cn string) bool {
+	city, err := gs.Cities.GetCity(cn)
+	if err != nil {
+		return false
+	}
+	if city.NumInfections == 0 {
+		return false
+	}
+	prob := gs.ProbabilityOfCity(cn)
+	if prob == 0.0 {
+		return false
+	}
+	return city.NumInfections == 3 || gs.InfectionDeck.BottomStriation().Contains(cn)
+}
+
 func (gs *GameState) GetCity(city string) (*City, error) {
 	city = strings.ToLower(city)
 	return gs.Cities.GetCity(city)

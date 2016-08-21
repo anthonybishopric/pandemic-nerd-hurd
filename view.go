@@ -174,7 +174,7 @@ func (p *PandemicView) printCityWithProb(game *pandemic.GameState, view *gocui.V
 	text := fmt.Sprintf("%v %s  %s  %.2f", city, diseaseEmoji, infectionRateEmojis, probability)
 	if probability == 0.0 {
 		fmt.Fprintln(view, p.colorAllGood(text))
-	} else if probability > 0.8 || cityData.NumInfections == 3 {
+	} else if game.CanOutbreak(city) {
 		fmt.Fprintln(view, p.colorOhFuck(text))
 	} else {
 		fmt.Fprintln(view, p.colorWarning(text))
