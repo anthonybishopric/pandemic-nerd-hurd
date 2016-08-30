@@ -11,45 +11,36 @@ func getNumCards(count int, numEpis int) []CityCard {
 	for x := 0; x < count-numEpis; x++ {
 		cards[x] = CityCard{City{Name: CityName(fmt.Sprintf("testCity%v", x))}, false}
 	}
-	for x := 0; x < numEpis; x++ {
+	for x := count - numEpis; x < count; x++ {
 		cards[x] = CityCard{City{}, true}
 	}
 	return cards
 }
 
 func TestCardProbabilities(t *testing.T) {
-	deck := CityDeck{
-		All:   getNumCards(100, EpidemicsPerGame),
-		Drawn: []CityCard{},
+	model := generateProbabilityModel(100, EpidemicsPerGame)
+	deck := &CityDeck{
+		All:              getNumCards(100, EpidemicsPerGame),
+		Drawn:            []CityCard{},
+		probabilityModel: &model,
 	}
 	if prob := deck.probabilityOfEpidemic(); prob != 0.1 {
 		t.Fatalf("Should have had a 10%% chance of epidemic, got %v", prob)
 	}
-	deck.Drawn = []CityCard{
-		{
-			City{Name: "SanFrancisco"},
-			false,
-		},
-		{
-			City{Name: "Sydney"},
-			false,
-		},
+	t.Log(deck.probabilityModel)
+	if err := deck.Draw(deck.All[0].City.Name); err != nil {
+		t.Fatal(err)
 	}
+	t.Log(deck.probabilityModel)
+	if err := deck.Draw(deck.All[1].City.Name); err != nil {
+		t.Fatal(err)
+	}
+	t.Log(deck.probabilityModel)
 	if prob := deck.probabilityOfEpidemic(); prob != 1.0/9.0 {
-		t.Fatalf("Should have had a 1/9 probability of epidemic, got %v", prob)
+		t.Fatalf("Should have had a %.4f probability of epidemic, got %.4f", 1.0/9.0, prob)
 	}
-	deck.Drawn = append(deck.Drawn,
-		CityCard{
-			City{
-				Name: "Epidemic!",
-			},
-			true,
-		},
-		CityCard{
-			City{Name: "BuenosAires"},
-			false,
-		},
-	)
+	deck.Draw(deck.All[2].City.Name)
+	deck.DrawEpidemic()
 	if prob := deck.probabilityOfEpidemic(); prob != 0 {
 		t.Fatalf("Should have had a 0%% probability of epidemic, got %v", prob)
 	}
@@ -103,14 +94,99 @@ func getTestCityDeck() CityDeck {
 	// and 2 cards are drawn from each set of 5+1.
 	citiesStr := Cities{}
 	citiesStr.Cities = cities
-	deck := CityDeck{}
-	deck.All = citiesStr.CityCards(2)
-	return deck
+	return citiesStr.GenerateCityDeck(2)
+}
+
+// Generate a deck with 19 cities and 4 epidemics.
+// This means 3 striations of cities will contain
+// 6 cards and 1 striation will contain 5.
+func generateLopsidedCityDeck() CityDeck {
+	cities := Cities{[]*City{
+		{
+			Name:    "a",
+			Disease: Blue.Type,
+		},
+		{
+			Name:    "b",
+			Disease: Blue.Type,
+		},
+		{
+			Name:    "c",
+			Disease: Blue.Type,
+		},
+		{
+			Name:    "d",
+			Disease: Yellow.Type,
+		},
+		{
+			Name:    "e",
+			Disease: Yellow.Type,
+		},
+		{
+			Name:    "f",
+			Disease: Yellow.Type,
+		},
+		{
+			Name:    "g",
+			Disease: Black.Type,
+		},
+		{
+			Name:    "h",
+			Disease: Black.Type,
+		},
+		{
+			Name:    "i",
+			Disease: Red.Type,
+		},
+		{
+			Name:    "j",
+			Disease: Red.Type,
+		},
+		{
+			Name:    "xa",
+			Disease: Blue.Type,
+		},
+		{
+			Name:    "xb",
+			Disease: Blue.Type,
+		},
+		{
+			Name:    "xc",
+			Disease: Blue.Type,
+		},
+		{
+			Name:    "xd",
+			Disease: Yellow.Type,
+		},
+		{
+			Name:    "xe",
+			Disease: Yellow.Type,
+		},
+		{
+			Name:    "xf",
+			Disease: Yellow.Type,
+		},
+		{
+			Name:    "xg",
+			Disease: Black.Type,
+		},
+		{
+			Name:    "xh",
+			Disease: Black.Type,
+		},
+		{
+			Name:    "xi",
+			Disease: Black.Type,
+		},
+	}}
+
+	return cities.GenerateCityDeck(4)
 }
 
 type testState struct {
 	infectRate   int
 	infectDrawn  []string
+	lopsided     bool
 	infectCustom func(infect *InfectionDeck) // if not set, will be equal to the names of all cities.
 	cityCustom   func(deck *CityDeck)        // called to mutate the standard test deck
 }
@@ -177,6 +253,21 @@ var infectTests = []testExpectation{
 			"e": 0.33,
 		},
 	},
+	{
+		scenario: "Game with 23 cards and 4 epidemics and a is drawn",
+		state: testState{
+			infectRate: 2,
+			lopsided:   true,
+			infectCustom: func(deck *InfectionDeck) {
+				deck.Draw("a")
+			},
+		},
+		infectProbabilities: map[string]float64{
+			// 0.175 * 2, where 0.175 is the probability of an epidemic.
+			// 0.175 = (1/4 * 1/5) + (3/4 * 1/6), the product of the scenarios.
+			"a": 0.35,
+		},
+	},
 }
 
 func TestRunInfectTests(t *testing.T) {
@@ -184,6 +275,9 @@ func TestRunInfectTests(t *testing.T) {
 		// SETUP
 		gs := GameState{}
 		cityDeck := getTestCityDeck()
+		if infectTest.state.lopsided {
+			cityDeck = generateLopsidedCityDeck()
+		}
 		if infectTest.state.cityCustom != nil {
 			infectTest.state.cityCustom(&cityDeck)
 		}

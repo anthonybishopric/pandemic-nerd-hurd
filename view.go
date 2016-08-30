@@ -41,7 +41,7 @@ func (p *PandemicView) Start(game *pandemic.GameState) {
 
 		p.renderCommandsView(game, gui, width)
 		p.renderStriations(game, gui, 2, height/2, width)
-		// p.renderTurnStatus(game, gui, 0, height/2, width/2, height)
+		p.renderTurnStatus(game, gui, 0, height/2, width/2, height)
 		p.renderConsoleArea(game, gui, width/2, height/2, width, height)
 
 		p.setUpKeyBindings(game, gui, "Commands")
@@ -61,11 +61,29 @@ func (p *PandemicView) renderCommandsView(game *pandemic.GameState, gui *gocui.G
 	commandView, err := gui.SetView("Commands", 0, 0, maxX, 2)
 	if err != nil && err != gocui.ErrUnknownView {
 		gui.Close()
-		p.logger.Fatalf("Could not render command view")
+		p.logger.Fatalf("Could not render command view: %v", err)
 	}
 	commandView.Editable = true
 	commandView.Autoscroll = false
 	commandView.Title = "Commands"
+}
+
+func (p *PandemicView) renderTurnStatus(game *pandemic.GameState, gui *gocui.Gui, topX, topY, bottomX, bottomY int) {
+	turnView, err := gui.SetView("Turns", topX, topY, bottomX, bottomY)
+	if err != nil && err != gocui.ErrUnknownView {
+		gui.Close()
+		p.logger.Fatalf("Could not render turn view: %v", err)
+	}
+	turnView.Clear()
+	turnView.Title = "Turns & Cities"
+	turnView.Editable = false
+	analysis := game.CityDeck.EpidemicAnalysis()
+	fmt.Fprintf(turnView, "Epidemics: %.2f, %.2f\n", analysis.FirstCardProbability, analysis.SecondCardProbability)
+	var warn string
+	if analysis.ScenariosWith100 > 0 {
+		warn = p.colorOhFuck(fmt.Sprintf("(%v scenarios at 100%%)", analysis.ScenariosWith100))
+	}
+	fmt.Fprintf(turnView, "Scenarios evaluated: %v %v\n", analysis.PossibleScenarios, warn)
 }
 
 func (p *PandemicView) terminateIfErr(err error, msg string, gui *gocui.Gui) {
@@ -133,7 +151,7 @@ func (p *PandemicView) renderStriations(game *pandemic.GameState, gui *gocui.Gui
 	for i := len(game.InfectionDeck.Striations) - 1; i >= 0; i-- {
 		widthMultiplier := len(game.InfectionDeck.Striations) - i - 1
 		cityNames := game.InfectionDeck.CitiesInStriation(i)
-		strName := fmt.Sprintf("Striation %v", i)
+		strName := fmt.Sprintf("Infection %v", i)
 		strView, err := gui.SetView(strName, strWidth*widthMultiplier, topY, (widthMultiplier+1)*strWidth, bottomY)
 		if err != nil {
 			return err

@@ -7,7 +7,6 @@ import (
 )
 
 const EpidemicsPerGame = 5
-const NumInfectionCards = 48
 
 type GameState struct {
 	Cities        *Cities        `json:"cities"`
@@ -17,6 +16,7 @@ type GameState struct {
 	InfectionRate int            `json:"infection_rate"`
 	Outbreaks     int            `json:"outbreaks"`
 	GameName      string         `json:"game_name"`
+	GameTurns     *GameTurns     `json:"game_turns"`
 }
 
 func NewGame(citiesFile string, gameName string) (*GameState, error) {
@@ -29,8 +29,7 @@ func NewGame(citiesFile string, gameName string) (*GameState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Invalid cities JSON file at %v: %v", citiesFile, err)
 	}
-	cityDeck := CityDeck{}
-	cityDeck.All = cities.CityCards(EpidemicsPerGame)
+	cityDeck := cities.GenerateCityDeck(EpidemicsPerGame)
 
 	infectionDeck := NewInfectionDeck(cities.CityNames())
 	return &GameState{
@@ -41,6 +40,7 @@ func NewGame(citiesFile string, gameName string) (*GameState, error) {
 		InfectionRate: 2,
 		Outbreaks:     0,
 		GameName:      gameName,
+		GameTurns:     InitGameTurns(),
 	}, nil
 }
 

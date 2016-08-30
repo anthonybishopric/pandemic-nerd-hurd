@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"path/filepath"
 	"testing"
 )
@@ -44,5 +45,25 @@ func TestSortByInfect(t *testing.T) {
 	sorted := cities.SortByInfectionLevel([]CityName{"a", "b", "c"})
 	if len(sorted) != 3 || sorted[0] != "b" || sorted[1] != "a" || sorted[2] != "c" {
 		t.Fatalf("Incorrect order: %+v", sorted)
+	}
+}
+
+func TestSimpleGame(t *testing.T) {
+	// four possible scenarios
+	// [2,1,1,1], [1,2,1,1], [1,1,2,1] and [1,1,1,2]
+	model := generateProbabilityModel(5, 4)
+
+	// 1/4*0.5 + 3/4*1 == .875
+	prob := model.EpidemicProbabilityAt(1)
+	if math.Floor(prob*1000)/1000 != 0.875 {
+		t.Fatalf("Expected 0.875 probability of epidemic, got %v", prob)
+	}
+
+	// this invalidates all of the the [1,*] scenarios. The 2nd card must now
+	// be an epidemic
+	model.DrawCity(0)
+	prob = model.EpidemicProbabilityAt(1)
+	if prob != 1.0 {
+		t.Fatalf("Expected 100%% chance of epidemic, got %v", prob)
 	}
 }
