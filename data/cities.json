@@ -3,241 +3,289 @@
         {
             "name":    "sanfrancisco",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["losangeles", "tokyo", "manila", "chicago"]
         },
         {
             "name":    "washington",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["miami", "atlanta", "montreal", "newyork"]
         },
         {
             "name":    "atlanta",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["chicago", "washington", "miami"]
         },
         {
             "name":    "montreal",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["chicago", "newyork", "washington"]
         },
         {
             "name":    "chicago",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["montreal", "atlanta", "mexicocity", "losangeles", "sanfrancisco"]
         },
         {
             "name":    "newyork",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["montreal", "washington", "london", "madrid"]
         },
         {
             "name":    "london",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["newyork", "essen", "paris", "madrid"]
         },
         {
             "name":    "essen",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["london", "stpetersburg", "milan", "paris"]
         },
         {
             "name":    "stpetersburg",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["essen", "moscow", "istanbul"]
         },
         {
             "name":    "milan",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["paris", "essen", "istanbul"]
         },
         {
             "name":    "paris",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["madrid", "london", "essen", "milan", "algiers"]
         },
         {
             "name":    "madrid",
             "disease": "Faded",
+            "original_disease": "Blue",
             "neighbors": ["newyork", "london", "paris", "algiers", "saopaulo"]
         },
         {
             "name":    "losangeles",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["sanfrancisco", "chicago", "mexicocity", "lima", "sydney"]
         },
         {
             "name":    "miami",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["atlanta", "washington", "bogota", "mexicocity"]
         },
         {
             "name":    "mexicocity",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["losangeles", "chicago", "miami", "bogota", "lima"]
         },
         {
             "name":    "bogota",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["miami", "saopaulo", "buenosaires", "lima", "mexicocity"]
         },
         {
             "name":    "lima",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["losangeles", "mexicocity", "bogota", "santiago"]
         },
         {
             "name":    "santiago",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["lima", "buenosaires"]
         },
         {
             "name":    "saopaulo",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["buenosaires", "bogota", "madrid", "lagos"]
         },
         {
             "name":    "buenosaires",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["santiago", "bogota", "saopaulo", "johannesburg"]
         },
         {
             "name":    "lagos",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["saopaulo", "kinshasa", "khartoum"]
         },
         {
             "name":    "khartoum",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["johannesburg", "kinshasa", "lagos", "cairo"]
         },
         {
             "name":    "kinshasa",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["lagos", "khartoum", "johannesburg"]
         },
         {
             "name":    "johannesburg",
             "disease": "Yellow",
+            "original_disease": "Yellow",
             "neighbors": ["buenosaires", "kinshasa", "khartoum"]
         },
         {
             "name":    "algiers",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["madrid", "paris", "istanbul", "cairo"]
         },
         {
             "name":    "istanbul",
             "disease": "Faded",
+            "original_disease": "Black",
             "neighbors": ["milan", "stpetersburg", "moscow", "baghdad", "cairo", "algiers"]
         },
         {
             "name":    "cairo",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["algiers", "istanbul", "baghdad", "riyadh", "khartoum"]
         },
         {
             "name":    "riyadh",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["cairo", "baghdad", "karachi"]
         },
         {
             "name":    "baghdad",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["istanbul", "tehran", "riyadh", "cairo"]
         },
         {
             "name":    "moscow",
             "disease": "Faded",
+            "original_disease": "Black",
             "neighbors": ["stpetersburg", "tehran", "istanbul"]
         },
         {
             "name":    "tehran",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["moscow", "delhi", "karachi", "baghdad"]
         },
         {
             "name":    "delhi",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["tehran", "kolkata", "chennai", "mumbai", "karachi"]
         },
         {
             "name":    "karachi",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["riyadh", "tehran", "delhi", "mumbai"]
         },
         {
             "name":    "mumbai",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["karachi", "delhi", "chennai"]
         },
         {
             "name":    "kolkata",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["chennai", "delhi", "hongkong", "bangkok"]
         },
         {
             "name":    "chennai",
             "disease": "Black",
+            "original_disease": "Black",
             "neighbors": ["mumbai", "delhi", "kolkata", "jakarta"]
         },
         {
             "name":    "beijing",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["shanghai", "seoul"]
         },
         {
             "name":    "seoul",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["beijing", "tokyo", "shanghai"]
         },
         {
             "name":    "tokyo",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["shanghai", "seoul", "sanfrancisco", "osaka"]
         },
         {
             "name":    "shanghai",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["beijing", "seoul", "tokyo", "taipei", "hongkong"]
         },
         {
             "name":    "taipei",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["shanghai", "osaka", "manila", "hongkong"]
         },
         {
             "name":    "osaka",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["taipei", "tokyo"]
         },
         {
             "name":    "hongkong",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["bangkok", "kolkata", "shanghai", "taipei", "manila", "hochiminhcity"]
         },
         {
             "name":    "bangkok",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["kolkata", "hongkong", "hochiminhcity", "jakarta"]
         },
         {
             "name":    "hochiminhcity",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["jakarta", "bangkok", "hongkong", "manila"]
         },
         {
             "name":    "jakarta",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["chennai", "bangkok", "hochiminhcity", "sydney"]
         },
         {
             "name":    "manila",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["hochiminhcity", "hongkong", "taipei", "sanfrancisco", "sydney"]
         },
         {
             "name":    "sydney",
             "disease": "Red",
+            "original_disease": "Red",
             "neighbors": ["jakarta", "manila", "losangeles"]
         }
     ]

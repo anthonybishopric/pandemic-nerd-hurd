@@ -22,20 +22,20 @@ func TestCardProbabilities(t *testing.T) {
 	deck := &CityDeck{
 		All:              getNumCards(100, EpidemicsPerGame),
 		Drawn:            []CityCard{},
-		probabilityModel: &model,
+		ProbabilityModel: &model,
 	}
 	if prob := deck.probabilityOfEpidemic(); prob != 0.1 {
 		t.Fatalf("Should have had a 10%% chance of epidemic, got %v", prob)
 	}
-	t.Log(deck.probabilityModel)
+	t.Log(deck.ProbabilityModel)
 	if err := deck.Draw(deck.All[0].City.Name); err != nil {
 		t.Fatal(err)
 	}
-	t.Log(deck.probabilityModel)
+	t.Log(deck.ProbabilityModel)
 	if err := deck.Draw(deck.All[1].City.Name); err != nil {
 		t.Fatal(err)
 	}
-	t.Log(deck.probabilityModel)
+	t.Log(deck.ProbabilityModel)
 	if prob := deck.probabilityOfEpidemic(); prob != 1.0/9.0 {
 		t.Fatalf("Should have had a %.4f probability of epidemic, got %.4f", 1.0/9.0, prob)
 	}

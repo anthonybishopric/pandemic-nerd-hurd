@@ -25,12 +25,13 @@ type CityCard struct {
 }
 
 type City struct {
-	Name          CityName    `json:"name"`
-	Disease       DiseaseType `json:"disease"`
-	PanicLevel    PanicLevel  `json:"panic_level"`
-	Neighbors     []string    `json:"neighbors"`
-	NumInfections int         `json:"num_infections"`
-	Quarantined   bool        `json:"quarantined"`
+	Name            CityName    `json:"name"`
+	Disease         DiseaseType `json:"disease"`
+	OriginalDisease DiseaseType `json:"original_disease"`
+	PanicLevel      PanicLevel  `json:"panic_level"`
+	Neighbors       []string    `json:"neighbors"`
+	NumInfections   int         `json:"num_infections"`
+	Quarantined     bool        `json:"quarantined"`
 }
 
 type Cities struct {
@@ -183,6 +184,32 @@ func (c *CityDeck) EpidemicsDrawn() int {
 		}
 	}
 	return count
+}
+
+// Returns the probability of drawing a particular type. If the given
+// disease type is Faded, will compare against the current disease instead
+// of the original disease.
+func (c *CityDeck) ProbabilityOfDrawingType(dt DiseaseType) float64 {
+	inAll := 0
+	for _, card := range c.All {
+		toCompare := card.City.OriginalDisease
+		if dt == Faded.Type {
+			toCompare = card.City.Disease
+		}
+		if toCompare == dt {
+			inAll++
+		}
+	}
+	for _, card := range c.Drawn {
+		toCompare := card.City.OriginalDisease
+		if dt == Faded.Type {
+			toCompare = card.City.Disease
+		}
+		if toCompare == dt {
+			inAll--
+		}
+	}
+	return float64(inAll) / (float64(c.Total()) - float64(len(c.Drawn)))
 }
 
 func (c *CityDeck) Draw(cn CityName) error {

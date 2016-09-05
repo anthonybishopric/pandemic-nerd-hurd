@@ -82,15 +82,41 @@ func (p *PandemicView) renderTurnStatus(game *pandemic.GameState, gui *gocui.Gui
 	analysis := game.CityDeck.EpidemicAnalysis()
 	total := analysis.FirstCardProbability + analysis.SecondCardProbability
 	fmt.Fprintf(turnView, "Probability of epidemic: %v\n", p.fractionalize(total))
-	fmt.Fprintf(turnView, "Epidemic on First City: %v\n", p.colorEpidemicPercent(analysis.FirstCardProbability))
-	fmt.Fprintf(turnView, "Epidemic on Second City: %v\n", p.colorEpidemicPercent(analysis.SecondCardProbability))
-	fmt.Fprintf(turnView, " -> After First City Epidemic: %v\n", p.colorEpidemicPercent(analysis.SecondCardEpiAfterFirstEpi))
-	fmt.Fprintf(turnView, "Upcoming Draws Guaranteed Safe: %v\n", p.colorUpcomingSafeCount(analysis.ComingDrawsWith0))
-	scenarioGuarantee := fmt.Sprintf("%v of %v Scenarios Guarantee Epidemic\n", analysis.ScenariosWith100, analysis.PossibleScenarios)
+	scenarioGuarantee := fmt.Sprintf("%v of %v Scenarios Guarantee Epidemic", analysis.ScenariosWith100, analysis.PossibleScenarios)
 	if analysis.ScenariosWith100 > 0 {
 		scenarioGuarantee = p.colorOhFuck(scenarioGuarantee)
 	}
 	fmt.Fprintln(turnView, scenarioGuarantee)
+
+	fmt.Fprintf(turnView, "Epidemic on First City: %v\n", p.colorEpidemicPercent(analysis.FirstCardProbability))
+	fmt.Fprintf(turnView, "Epidemic on Second City: %v\n", p.colorEpidemicPercent(analysis.SecondCardProbability))
+	fmt.Fprintf(turnView, " -> After First City Epidemic: %v\n", p.colorEpidemicPercent(analysis.SecondCardEpiAfterFirstEpi))
+	fmt.Fprintf(turnView, "Upcoming Draws Guaranteed Safe: %v\n", p.colorUpcomingSafeCount(analysis.ComingDrawsWith0))
+	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Black.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Black.Type))
+	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Red.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Red.Type))
+	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Blue.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Blue.Type))
+	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Yellow.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Yellow.Type))
+	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Faded.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Faded.Type))
+
+}
+
+func (p *PandemicView) iconFor(dt pandemic.DiseaseType) string {
+	var diseaseEmoji string
+	switch dt {
+	case pandemic.Yellow.Type:
+		diseaseEmoji = "\U0001f49b"
+	case pandemic.Blue.Type:
+		diseaseEmoji = "\U0001f499"
+	case pandemic.Red.Type:
+		diseaseEmoji = "\u2764\ufe0f"
+	case pandemic.Black.Type:
+		diseaseEmoji = "\u26ab"
+	case pandemic.Faded.Type:
+		diseaseEmoji = "\U0001f608"
+	default:
+		diseaseEmoji = string(dt)
+	}
+	return diseaseEmoji
 }
 
 func (p *PandemicView) colorUpcomingSafeCount(safe int) string {
@@ -231,21 +257,7 @@ func (p *PandemicView) printCityWithProb(game *pandemic.GameState, view *gocui.V
 	// }
 	probability := game.ProbabilityOfCity(city)
 
-	var diseaseEmoji string
-	switch cityData.Disease {
-	case pandemic.Yellow.Type:
-		diseaseEmoji = "\U0001f49b"
-	case pandemic.Blue.Type:
-		diseaseEmoji = "\U0001f499"
-	case pandemic.Red.Type:
-		diseaseEmoji = "\u2764\ufe0f"
-	case pandemic.Black.Type:
-		diseaseEmoji = "\u26ab"
-	case pandemic.Faded.Type:
-		diseaseEmoji = "\U0001f608"
-	default:
-		diseaseEmoji = string(cityData.Disease)
-	}
+	diseaseEmoji := p.iconFor(cityData.Disease)
 
 	infectionRateEmojis := ""
 	for i := 0; i < cityData.NumInfections; i++ {

@@ -37,8 +37,8 @@ func TestSetContains(t *testing.T) {
 }
 
 func TestSet_Members(t *testing.T) {
-	s := Set{testStringable("foo"): struct{}{}, testStringable("bar"): struct{}{}}
-	if members := s.Members(); members[0].String() != "bar" || members[1].String() != "foo" || len(members) != 2 {
+	s := Set{"foo": struct{}{}, "bar": struct{}{}}
+	if members := s.Members(); members[0] != "bar" || members[1] != "foo" || len(members) != 2 {
 		t.Fatalf("Returns members of a set in sorted order %v", members)
 	}
 }
