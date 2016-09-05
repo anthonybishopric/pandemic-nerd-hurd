@@ -15,16 +15,18 @@ type PandemicView struct {
 	logger          *logrus.Logger
 	colorAllGood    func(...interface{}) string
 	colorWarning    func(...interface{}) string
+	colorHighlight  func(...interface{}) string
 	colorOhFuck     func(...interface{}) string
 	fileSaveCounter int
 }
 
 func NewView(logger *logrus.Logger) *PandemicView {
 	return &PandemicView{
-		logger:       logger,
-		colorAllGood: color.New(color.FgGreen).Add(color.BgBlack).SprintFunc(),
-		colorWarning: color.New(color.FgYellow).Add(color.BgBlack).SprintFunc(),
-		colorOhFuck:  color.New(color.FgBlack).Add(color.BgRed).Add(color.BlinkRapid).SprintFunc(),
+		logger:         logger,
+		colorAllGood:   color.New(color.FgGreen).Add(color.BgBlack).SprintFunc(),
+		colorWarning:   color.New(color.FgYellow).Add(color.BgBlack).SprintFunc(),
+		colorHighlight: color.New(color.FgRed).SprintFunc(),
+		colorOhFuck:    color.New(color.FgBlack).Add(color.BgRed).Add(color.BlinkSlow).SprintFunc(),
 	}
 }
 
