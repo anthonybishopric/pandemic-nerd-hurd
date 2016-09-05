@@ -9,10 +9,10 @@ import (
 func getNumCards(count int, numEpis int) []CityCard {
 	cards := make([]CityCard, count)
 	for x := 0; x < count-numEpis; x++ {
-		cards[x] = CityCard{City{Name: CityName(fmt.Sprintf("testCity%v", x))}, false}
+		cards[x] = CityCard{City{Name: CityName(fmt.Sprintf("testCity%v", x))}, false, false}
 	}
 	for x := count - numEpis; x < count; x++ {
-		cards[x] = CityCard{City{}, true}
+		cards[x] = CityCard{City{}, true, false}
 	}
 	return cards
 }
@@ -94,7 +94,7 @@ func getTestCityDeck() CityDeck {
 	// and 2 cards are drawn from each set of 5+1.
 	citiesStr := Cities{}
 	citiesStr.Cities = cities
-	return citiesStr.GenerateCityDeck(2)
+	return citiesStr.GenerateCityDeck(2, 0)
 }
 
 // Generate a deck with 19 cities and 4 epidemics.
@@ -180,7 +180,7 @@ func generateLopsidedCityDeck() CityDeck {
 		},
 	}}
 
-	return cities.GenerateCityDeck(4)
+	return cities.GenerateCityDeck(4, 0)
 }
 
 type testState struct {

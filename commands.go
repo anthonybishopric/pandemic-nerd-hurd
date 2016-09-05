@@ -117,9 +117,17 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			break
 		}
 		fmt.Fprintf(consoleView, "Drew %v from city deck\n", city)
+	case "funded-event", "f":
+		err := gameState.CityDeck.DrawFundedEvent()
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning(err))
+			break
+		}
+		fmt.Fprintln(consoleView, "Drew a funded event")
 	case "quarantine", "q":
 		if len(commandArgs) != 2 {
-			fmt.Fprintf(consoleView, p.colorWarning("quarantine must be called with a city name"))
+			fmt.Fprintln(consoleView, p.colorWarning("quarantine must be called with a city name"))
+			break
 		}
 		cityName, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {

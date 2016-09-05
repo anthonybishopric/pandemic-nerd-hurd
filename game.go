@@ -40,8 +40,9 @@ var (
 		"nov2",
 		"dec2",
 	)
-	loadCmd  = app.Command("load", "Load a game from an existing saved game")
-	loadFile = loadCmd.Flag("file", "The JSON file containing the game state").Required().ExistingFile()
+	startNumFundedEvents = app.Flag("funded-events", "The number of funded events present in the city deck.").Required().Int()
+	loadCmd              = app.Command("load", "Load a game from an existing saved game")
+	loadFile             = loadCmd.Flag("file", "The JSON file containing the game state").Required().ExistingFile()
 )
 
 func main() {
@@ -56,7 +57,7 @@ func main() {
 
 	switch cmd {
 	case "start":
-		gameState, err = pandemic.NewGame(filepath.Join(wd, *startCities), *startMonth)
+		gameState, err = pandemic.NewGame(filepath.Join(wd, *startCities), *startMonth, *startNumFundedEvents)
 		if err != nil {
 			logger.Fatalln(err)
 		}

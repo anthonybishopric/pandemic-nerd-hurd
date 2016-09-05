@@ -19,8 +19,9 @@ type CityDeck struct {
 }
 
 type CityCard struct {
-	City       City
-	IsEpidemic bool `json:"is_epidemic"`
+	City          City
+	IsEpidemic    bool `json:"is_epidemic"`
+	IsFundedEvent bool `json:"is_funded_event"`
 }
 
 type City struct {
@@ -62,13 +63,16 @@ func (b byInfectionRate) Less(i, j int) bool {
 }
 
 // do we need to model city specializations?
-func (c *Cities) GenerateCityDeck(epidemicCount int) CityDeck {
+func (c *Cities) GenerateCityDeck(epidemicCount int, fundedEventCount int) CityDeck {
 	cards := []CityCard{}
 	for _, city := range c.Cities {
-		cards = append(cards, CityCard{*city, false})
+		cards = append(cards, CityCard{*city, false, false})
 	}
 	for i := 0; i < epidemicCount; i++ {
-		cards = append(cards, CityCard{City{}, true})
+		cards = append(cards, CityCard{City{}, true, false})
+	}
+	for i := 0; i < fundedEventCount; i++ {
+		cards = append(cards, CityCard{City{}, false, true})
 	}
 	probModel := generateProbabilityModel(len(cards), epidemicCount)
 	deck := CityDeck{
@@ -197,6 +201,31 @@ func (c *CityDeck) Draw(cn CityName) error {
 	return fmt.Errorf("No city called %v in the city deck", cn)
 }
 
+func (c *CityDeck) NumFundedEvents() int {
+	var numFunded int
+	for _, card := range c.All {
+		if card.IsFundedEvent {
+			numFunded++
+		}
+	}
+	return numFunded
+}
+
+func (c *CityDeck) DrawFundedEvent() error {
+	var alreadyDrawn int
+	for _, card := range c.Drawn {
+		if card.IsFundedEvent {
+			alreadyDrawn++
+		}
+	}
+	if alreadyDrawn >= c.NumFundedEvents() {
+		return fmt.Errorf("Have already drawn %v funded events, cannot draw more", alreadyDrawn)
+	}
+	c.probabilityModel.DrawCity(len(c.Drawn))
+	c.Drawn = append(c.Drawn, CityCard{City{}, false, true})
+	return nil
+}
+
 func (c *CityDeck) DrawEpidemic() error {
 	totalEpis := c.NumEpidemics()
 	var drawnEpis int
@@ -209,7 +238,7 @@ func (c *CityDeck) DrawEpidemic() error {
 		return fmt.Errorf("Already drawn %v epidemics this game, there shouldn't be any more", drawnEpis)
 	}
 	c.probabilityModel.DrawEpidemic(len(c.Drawn))
-	c.Drawn = append(c.Drawn, CityCard{City{}, true})
+	c.Drawn = append(c.Drawn, CityCard{City{}, true, false})
 	return nil
 }
 
@@ -275,6 +304,7 @@ type EpidemicAnalysis struct {
 // 2 extra is 10 possible scenarios (5!)/(2!)(3!) = 5*4/2 = 10
 func generateProbabilityModel(cardCount int, epidemics int) cityDeckProbabilityModel {
 	// (53-(53%5))/5 = (50/5) = 10
+	cardCount = cardCount
 	minCardsPerStriation := (cardCount - (cardCount % epidemics)) / epidemics
 	// 53 % 5 = 3
 	striationsWithOneMore := cardCount % epidemics

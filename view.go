@@ -78,12 +78,38 @@ func (p *PandemicView) renderTurnStatus(game *pandemic.GameState, gui *gocui.Gui
 	turnView.Title = "Turns & Cities"
 	turnView.Editable = false
 	analysis := game.CityDeck.EpidemicAnalysis()
-	fmt.Fprintf(turnView, "Epidemics: %.2f, %.2f\n", analysis.FirstCardProbability, analysis.SecondCardProbability)
-	var warn string
+	total := analysis.FirstCardProbability + analysis.SecondCardProbability
+	fmt.Fprintf(turnView, "Total probability of epidemic: %v (%v)\n", p.colorEpidemicPercent(total), p.fractionalize(total))
+	fmt.Fprintf(turnView, "Epidemic on First City: %v\n", p.colorEpidemicPercent(analysis.FirstCardProbability))
+	fmt.Fprintf(turnView, "Epidemic on Second City: %v\n", p.colorEpidemicPercent(analysis.SecondCardProbability))
+	scenarioGuarantee := fmt.Sprintf("%v of %v scenarios guarantee epidemic\n", analysis.ScenariosWith100, analysis.PossibleScenarios)
 	if analysis.ScenariosWith100 > 0 {
-		warn = p.colorOhFuck(fmt.Sprintf("(%v scenarios at 100%%)", analysis.ScenariosWith100))
+		scenarioGuarantee = p.colorOhFuck(scenarioGuarantee)
 	}
-	fmt.Fprintf(turnView, "Scenarios evaluated: %v %v\n", analysis.PossibleScenarios, warn)
+	fmt.Fprintln(turnView, scenarioGuarantee)
+}
+
+func (p *PandemicView) colorEpidemicPercent(total float64) string {
+	var outStr string
+	if total == 0.0 {
+		outStr = p.colorAllGood(fmt.Sprintf("%.3f", total))
+	} else if total > 0.5 {
+		outStr = p.colorOhFuck(fmt.Sprintf("%.3f", total))
+	} else {
+		outStr = p.colorWarning(fmt.Sprintf("%.3f", total))
+	}
+	return outStr
+}
+
+func (p *PandemicView) fractionalize(decimalRep float64) string {
+	num, dem := int(math.Floor(decimalRep*10+0.5)), 10
+	for divisor := 2; float64(divisor) <= math.Min(float64(num), float64(dem)); divisor++ {
+		if num%divisor == 0 && dem%divisor == 0 {
+			num = num / divisor
+			dem = dem / divisor
+		}
+	}
+	return fmt.Sprintf("about %d out of %d", num, dem)
 }
 
 func (p *PandemicView) terminateIfErr(err error, msg string, gui *gocui.Gui) {
@@ -137,6 +163,10 @@ func (p *PandemicView) renderConsoleArea(game *pandemic.GameState, gui *gocui.Gu
 	p.terminateIfErr(err, "Could not set up console view", gui)
 	view.Wrap = true
 	view.Autoscroll = true
+	if err == gocui.ErrUnknownView {
+		fmt.Fprintf(view, "~ %v %v %v ~\n", p.colorAllGood("Pandemic Legacy"), p.colorHighlight("NeRd hUrD"), p.colorWarning("Assist-o-tron"))
+		fmt.Fprintf(view, "Starting %v, %v City Cards, %v Epidemics, %v Funded Events\n", game.GameName, game.CityDeck.Total(), game.CityDeck.NumEpidemics(), game.CityDeck.NumFundedEvents())
+	}
 }
 
 // Creates a series of columns, representing the current infection deck striations. Striations closer
@@ -169,7 +199,7 @@ func (p *PandemicView) renderStriations(game *pandemic.GameState, gui *gocui.Gui
 		return err
 	}
 	drawnView.Clear()
-	drawnView.Title = "Drawn"
+	drawnView.Title = "Infection Drawn"
 	for _, city := range game.InfectionDeck.CitiesInDrawn() {
 		p.terminateIfErr(p.printCityWithProb(game, drawnView, city), "Could not render drawn card", gui)
 	}

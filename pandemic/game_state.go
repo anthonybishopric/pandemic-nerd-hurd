@@ -19,7 +19,7 @@ type GameState struct {
 	GameTurns     *GameTurns     `json:"game_turns"`
 }
 
-func NewGame(citiesFile string, gameName string) (*GameState, error) {
+func NewGame(citiesFile string, gameName string, numFundedEvents int) (*GameState, error) {
 	var cities Cities
 	data, err := ioutil.ReadFile(citiesFile)
 	if err != nil {
@@ -29,7 +29,7 @@ func NewGame(citiesFile string, gameName string) (*GameState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Invalid cities JSON file at %v: %v", citiesFile, err)
 	}
-	cityDeck := cities.GenerateCityDeck(EpidemicsPerGame)
+	cityDeck := cities.GenerateCityDeck(EpidemicsPerGame, numFundedEvents)
 
 	infectionDeck := NewInfectionDeck(cities.CityNames())
 	return &GameState{
