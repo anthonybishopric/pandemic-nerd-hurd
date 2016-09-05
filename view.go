@@ -79,14 +79,26 @@ func (p *PandemicView) renderTurnStatus(game *pandemic.GameState, gui *gocui.Gui
 	turnView.Editable = false
 	analysis := game.CityDeck.EpidemicAnalysis()
 	total := analysis.FirstCardProbability + analysis.SecondCardProbability
-	fmt.Fprintf(turnView, "Total probability of epidemic: %v (%v)\n", p.colorEpidemicPercent(total), p.fractionalize(total))
+	fmt.Fprintf(turnView, "Probability of epidemic: %v\n", p.fractionalize(total))
 	fmt.Fprintf(turnView, "Epidemic on First City: %v\n", p.colorEpidemicPercent(analysis.FirstCardProbability))
 	fmt.Fprintf(turnView, "Epidemic on Second City: %v\n", p.colorEpidemicPercent(analysis.SecondCardProbability))
-	scenarioGuarantee := fmt.Sprintf("%v of %v scenarios guarantee epidemic\n", analysis.ScenariosWith100, analysis.PossibleScenarios)
+	fmt.Fprintf(turnView, " -> After First City Epidemic: %v\n", p.colorEpidemicPercent(analysis.SecondCardEpiAfterFirstEpi))
+	fmt.Fprintf(turnView, "Upcoming Draws Guaranteed Safe: %v\n", p.colorUpcomingSafeCount(analysis.ComingDrawsWith0))
+	scenarioGuarantee := fmt.Sprintf("%v of %v Scenarios Guarantee Epidemic\n", analysis.ScenariosWith100, analysis.PossibleScenarios)
 	if analysis.ScenariosWith100 > 0 {
 		scenarioGuarantee = p.colorOhFuck(scenarioGuarantee)
 	}
 	fmt.Fprintln(turnView, scenarioGuarantee)
+}
+
+func (p *PandemicView) colorUpcomingSafeCount(safe int) string {
+	if safe > 2 {
+		return p.colorAllGood(fmt.Sprintf("%v", safe))
+	} else if safe > 0 {
+		return p.colorWarning(fmt.Sprintf("%v", safe))
+	} else {
+		return p.colorOhFuck(fmt.Sprintf("%v", safe))
+	}
 }
 
 func (p *PandemicView) colorEpidemicPercent(total float64) string {

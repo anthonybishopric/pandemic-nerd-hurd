@@ -294,17 +294,18 @@ type cityDeckScenario struct {
 }
 
 type EpidemicAnalysis struct {
-	FirstCardProbability  float64
-	SecondCardProbability float64
-	PossibleScenarios     int
-	ScenariosWith100      int
+	FirstCardProbability       float64
+	SecondCardProbability      float64
+	SecondCardEpiAfterFirstEpi float64
+	PossibleScenarios          int
+	ScenariosWith100           int
+	ComingDrawsWith0           int
 }
 
 // 1 extra is 5 possible scenarios 5!/1!(4!) = 5
 // 2 extra is 10 possible scenarios (5!)/(2!)(3!) = 5*4/2 = 10
 func generateProbabilityModel(cardCount int, epidemics int) cityDeckProbabilityModel {
 	// (53-(53%5))/5 = (50/5) = 10
-	cardCount = cardCount
 	minCardsPerStriation := (cardCount - (cardCount % epidemics)) / epidemics
 	// 53 % 5 = 3
 	striationsWithOneMore := cardCount % epidemics
@@ -393,7 +394,27 @@ func (c *cityDeckProbabilityModel) EpidemicAnalysis(index int) EpidemicAnalysis 
 	epiOnSecondNotFirst := noEpiOnFirst.EpidemicProbabilityAt(index + 1)
 	analysis.SecondCardProbability = analysis.FirstCardProbability*epiOnSecondAndFirst +
 		(1.0-analysis.FirstCardProbability)*epiOnSecondNotFirst
+	analysis.SecondCardEpiAfterFirstEpi = epiOnSecondAndFirst
+	var zeroCount int
+	for i := index; i <= c.HighestIndex(); i++ {
+		if c.EpidemicProbabilityAt(i) == 0.0 {
+			zeroCount++
+		}
+	}
+	analysis.ComingDrawsWith0 = zeroCount
 	return analysis
+}
+
+func (c *cityDeckProbabilityModel) HighestIndex() int {
+	if len(c.scenarios) == 0 {
+		return 0
+	}
+	scen := c.scenarios[0]
+	var total int
+	for _, v := range scen.cardCounts {
+		total += v
+	}
+	return total - 1
 }
 
 func (c *cityDeckProbabilityModel) EpidemicProbabilityAt(index int) float64 {
