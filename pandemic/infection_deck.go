@@ -47,7 +47,7 @@ func (d *InfectionDeck) CitiesInStriation(strIndx int) []CityName {
 	members := striation.Members()
 	cityNames := make([]CityName, len(members))
 	for i, member := range members {
-		cityNames[i] = CityName(member.String())
+		cityNames[i] = CityName(member)
 	}
 	return cityNames
 }
@@ -56,7 +56,7 @@ func (d *InfectionDeck) CitiesInDrawn() []CityName {
 	members := d.Drawn.Members()
 	cityNames := make([]CityName, len(members))
 	for i, member := range members {
-		cityNames[i] = CityName(member.String())
+		cityNames[i] = CityName(member)
 	}
 	return cityNames
 }

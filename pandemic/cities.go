@@ -15,7 +15,7 @@ func (c CityName) String() string {
 type CityDeck struct {
 	Drawn            []CityCard
 	All              []CityCard
-	probabilityModel *cityDeckProbabilityModel
+	ProbabilityModel *cityDeckProbabilityModel
 }
 
 type CityCard struct {
@@ -78,7 +78,7 @@ func (c *Cities) GenerateCityDeck(epidemicCount int, fundedEventCount int) CityD
 	deck := CityDeck{
 		Drawn:            []CityCard{},
 		All:              cards,
-		probabilityModel: &probModel,
+		ProbabilityModel: &probModel,
 	}
 	return deck
 }
@@ -191,7 +191,7 @@ func (c *CityDeck) Draw(cn CityName) error {
 			return fmt.Errorf("%v has already been drawn from the city deck", cn)
 		}
 	}
-	c.probabilityModel.DrawCity(len(c.Drawn))
+	c.ProbabilityModel.DrawCity(len(c.Drawn))
 	for _, card := range c.All {
 		if card.City.Name == cn {
 			c.Drawn = append(c.Drawn, card)
@@ -221,7 +221,7 @@ func (c *CityDeck) DrawFundedEvent() error {
 	if alreadyDrawn >= c.NumFundedEvents() {
 		return fmt.Errorf("Have already drawn %v funded events, cannot draw more", alreadyDrawn)
 	}
-	c.probabilityModel.DrawCity(len(c.Drawn))
+	c.ProbabilityModel.DrawCity(len(c.Drawn))
 	c.Drawn = append(c.Drawn, CityCard{City{}, false, true})
 	return nil
 }
@@ -237,7 +237,7 @@ func (c *CityDeck) DrawEpidemic() error {
 	if drawnEpis >= totalEpis {
 		return fmt.Errorf("Already drawn %v epidemics this game, there shouldn't be any more", drawnEpis)
 	}
-	c.probabilityModel.DrawEpidemic(len(c.Drawn))
+	c.ProbabilityModel.DrawEpidemic(len(c.Drawn))
 	c.Drawn = append(c.Drawn, CityCard{City{}, true, false})
 	return nil
 }
@@ -252,13 +252,13 @@ func (c *CityDeck) DrawEpidemic() error {
 // the game of Pandemic.
 func (c CityDeck) probabilityOfEpidemic() float64 {
 	index := len(c.Drawn)
-	analysis := c.probabilityModel.EpidemicAnalysis(index)
+	analysis := c.ProbabilityModel.EpidemicAnalysis(index)
 	return analysis.FirstCardProbability + analysis.SecondCardProbability
 }
 
 func (c CityDeck) EpidemicAnalysis() EpidemicAnalysis {
 	index := len(c.Drawn)
-	return c.probabilityModel.EpidemicAnalysis(index)
+	return c.ProbabilityModel.EpidemicAnalysis(index)
 }
 
 ///////////////////////////////////
@@ -270,16 +270,16 @@ func (c CityDeck) EpidemicAnalysis() EpidemicAnalysis {
 // probability of an epidemic on card draw N?" The total probability of an
 // epidemic draw is the weighed sum of probabilities of all scenarios.
 type cityDeckProbabilityModel struct {
-	scenarios      []cityDeckScenario
-	epidemicsDrawn int
-	lastIndex      int
+	Scenarios      []cityDeckScenario `json:"scenarios"`
+	EpidemicsDrawn int                `json:"epidemics_drawn"`
+	LastIndex      int                `json:"last_index"`
 }
 
 // A deck scenario describes when the city deck has striations with card
-// counts matching the cardCounts integer slice. As an example, consider a
+// counts matching the CardCounts integer slice. As an example, consider a
 // game scenario where the first 2 striations have 10 cards and the remaining
 // 3 have 11 cards. This can occur in a game with 53 cards (48 cities, 5
-// epidemics, no funded events). The underlying cardCounts slice will contain
+// epidemics, no funded events). The underlying CardCounts slice will contain
 // the values [10,10,11,11,11].
 //
 // While playing a real game of Pandemic, it is possible to draw epidemics in
@@ -290,7 +290,7 @@ type cityDeckProbabilityModel struct {
 // removed from the set of scenarios. As a result, weighted probabilities can
 // be more precise with respect to actual possible scenarios.
 type cityDeckScenario struct {
-	cardCounts []int
+	CardCounts []int `json:"card_counts"`
 }
 
 type EpidemicAnalysis struct {
@@ -346,44 +346,44 @@ func generateProbabilityModel(cardCount int, epidemics int) cityDeckProbabilityM
 }
 
 func (c *cityDeckProbabilityModel) DrawCity(index int) {
-	if index <= c.lastIndex {
+	if index <= c.LastIndex {
 		panic("Already drew this index!")
 	}
 	filtered := []cityDeckScenario{}
-	for _, scenario := range c.scenarios {
-		if scenario.EpidemicProbabilityAt(index, c.epidemicsDrawn) != 1.0 {
+	for _, scenario := range c.Scenarios {
+		if scenario.EpidemicProbabilityAt(index, c.EpidemicsDrawn) != 1.0 {
 			filtered = append(filtered, scenario)
 		}
 	}
-	c.scenarios = filtered
-	c.lastIndex = index
+	c.Scenarios = filtered
+	c.LastIndex = index
 }
 
 func (c *cityDeckProbabilityModel) DrawEpidemic(index int) {
-	if index <= c.lastIndex {
+	if index <= c.LastIndex {
 		panic("Already drew this index!")
 	}
 	filtered := []cityDeckScenario{}
-	for _, scenario := range c.scenarios {
-		if scenario.EpidemicProbabilityAt(index, c.epidemicsDrawn) != 0.0 {
+	for _, scenario := range c.Scenarios {
+		if scenario.EpidemicProbabilityAt(index, c.EpidemicsDrawn) != 0.0 {
 			filtered = append(filtered, scenario)
 		}
 	}
-	c.scenarios = filtered
-	c.epidemicsDrawn++
-	c.lastIndex = index
+	c.Scenarios = filtered
+	c.EpidemicsDrawn++
+	c.LastIndex = index
 }
 
 func (c *cityDeckProbabilityModel) EpidemicAnalysis(index int) EpidemicAnalysis {
 	analysis := EpidemicAnalysis{}
-	for _, scenario := range c.scenarios {
-		scenProb := scenario.EpidemicProbabilityAt(index, c.epidemicsDrawn)
-		scenProb2 := scenario.EpidemicProbabilityAt(index+1, c.epidemicsDrawn)
+	for _, scenario := range c.Scenarios {
+		scenProb := scenario.EpidemicProbabilityAt(index, c.EpidemicsDrawn)
+		scenProb2 := scenario.EpidemicProbabilityAt(index+1, c.EpidemicsDrawn)
 		if scenProb == 1.0 || scenProb2 == 1.0 {
 			analysis.ScenariosWith100++
 		}
 	}
-	analysis.PossibleScenarios = len(c.scenarios)
+	analysis.PossibleScenarios = len(c.Scenarios)
 	analysis.FirstCardProbability = c.EpidemicProbabilityAt(index)
 
 	noEpiOnFirst := *c
@@ -406,12 +406,12 @@ func (c *cityDeckProbabilityModel) EpidemicAnalysis(index int) EpidemicAnalysis 
 }
 
 func (c *cityDeckProbabilityModel) HighestIndex() int {
-	if len(c.scenarios) == 0 {
+	if len(c.Scenarios) == 0 {
 		return 0
 	}
-	scen := c.scenarios[0]
+	scen := c.Scenarios[0]
 	var total int
-	for _, v := range scen.cardCounts {
+	for _, v := range scen.CardCounts {
 		total += v
 	}
 	return total - 1
@@ -419,15 +419,15 @@ func (c *cityDeckProbabilityModel) HighestIndex() int {
 
 func (c *cityDeckProbabilityModel) EpidemicProbabilityAt(index int) float64 {
 	var aggregate float64
-	denominator := float64(len(c.scenarios))
-	for _, scenario := range c.scenarios {
-		aggregate += scenario.EpidemicProbabilityAt(index, c.epidemicsDrawn) / denominator
+	denominator := float64(len(c.Scenarios))
+	for _, scenario := range c.Scenarios {
+		aggregate += scenario.EpidemicProbabilityAt(index, c.EpidemicsDrawn) / denominator
 	}
 	return aggregate
 }
 
 func (c *cityDeckScenario) EpidemicProbabilityAt(index, epidemicsDrawn int) float64 {
-	for i, striationCount := range c.cardCounts {
+	for i, striationCount := range c.CardCounts {
 		if index >= striationCount {
 			index = index - striationCount
 		} else {
