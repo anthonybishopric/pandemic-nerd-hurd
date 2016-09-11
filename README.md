@@ -14,10 +14,13 @@ $ ./pandemic-nerd-hurd
 
 ## TODO
 
+_Features_
 * Show panic levels in the UI
 * Show player turns, which turns caused epidemics
-* Separate turns into city-deck striations
-* Incorporate epidemic probability in city outbreak probability
-* Toggle outbreak probability view in main UI
 * Track character traits and powerups
 * Remind people on their turn what they can do (special abilities)
+
+_Code Fixes_
+* Keep pointers to actual epidemic and funded event cards in players / turns
+* Funded events need to be named and tracked.
+* BUG: current turn on loading a save file is not the correct pointer to a player.

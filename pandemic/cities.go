@@ -2,7 +2,6 @@ package pandemic
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 )
 
@@ -15,6 +14,7 @@ func (c CityName) String() string {
 type CityDeck struct {
 	Drawn            []CityCard
 	All              []CityCard
+	StartCities      []CityCard
 	ProbabilityModel *cityDeckProbabilityModel
 }
 
@@ -43,28 +43,10 @@ type byInfectionRate struct {
 	cities *Cities
 }
 
-func (b byInfectionRate) Len() int { return len(b.names) }
-
-func (b byInfectionRate) Swap(i, j int) {
-	b.names[i], b.names[j] = b.names[j], b.names[i]
-}
-
-func (b byInfectionRate) Less(i, j int) bool {
-	nameI := b.names[i]
-	nameJ := b.names[j]
-	cityI, _ := b.cities.GetCity(nameI)
-	cityJ, _ := b.cities.GetCity(nameJ)
-	if cityI.NumInfections > cityJ.NumInfections {
-		return true
-	}
-	if cityI.NumInfections < cityJ.NumInfections {
-		return false
-	}
-	return strings.Compare(string(nameI), string(nameJ)) < 0
-}
-
-// do we need to model city specializations?
-func (c *Cities) GenerateCityDeck(epidemicCount int, fundedEventCount int) CityDeck {
+// TODO: model city specializations / unfunded events
+// TODO: funded events + epidemics should be named for drawing. If the initial hands
+// contain funded events, all cure stats will be wrong.
+func (c *Cities) GenerateCityDeck(epidemicCount int, fundedEventCount int, startCities Set) (CityDeck, error) {
 	cards := []CityCard{}
 	for _, city := range c.Cities {
 		cards = append(cards, CityCard{*city, false, false})
@@ -75,19 +57,25 @@ func (c *Cities) GenerateCityDeck(epidemicCount int, fundedEventCount int) CityD
 	for i := 0; i < fundedEventCount; i++ {
 		cards = append(cards, CityCard{City{}, false, true})
 	}
-	probModel := generateProbabilityModel(len(cards), epidemicCount)
+
+	probModel := generateProbabilityModel(len(cards)-startCities.Size(), epidemicCount)
 	deck := CityDeck{
 		Drawn:            []CityCard{},
 		All:              cards,
 		ProbabilityModel: &probModel,
+		StartCities:      []CityCard{},
 	}
-	return deck
-}
+	for _, startCity := range startCities.Members() {
+		card, err := deck.GetCity(CityName(startCity))
+		if err != nil {
+			return deck, fmt.Errorf("%v is not a valid city name", startCity)
+		}
+		// append directly to drawn without altering index.
+		deck.Drawn = append(deck.Drawn, *card)
+		deck.StartCities = append(deck.StartCities, *card)
+	}
 
-func (c *Cities) SortByInfectionLevel(cities []CityName) []CityName {
-	sorted := &byInfectionRate{cities, c}
-	sort.Sort(sorted)
-	return sorted.names
+	return deck, nil
 }
 
 func (c *Cities) GetCityByPrefix(prefix string) (*City, error) {
@@ -186,10 +174,28 @@ func (c *CityDeck) EpidemicsDrawn() int {
 	return count
 }
 
+func (c *CityDeck) ProbabilityOfDrawing(cn CityName) float64 {
+	for _, already := range c.Drawn {
+		if already.City.Name == cn {
+			return 0.0
+		}
+	}
+	return 1.0 / float64(len(c.All)-len(c.Drawn))
+}
+
 // Returns the probability of drawing a particular type. If the given
 // disease type is Faded, will compare against the current disease instead
 // of the original disease.
 func (c *CityDeck) ProbabilityOfDrawingType(dt DiseaseType) float64 {
+	inAll := c.RemainingCardsWith(dt)
+	return float64(inAll) / (float64(c.RemainingCards()))
+}
+
+func (c *CityDeck) RemainingCards() int {
+	return c.Total() - len(c.Drawn)
+}
+
+func (c *CityDeck) RemainingCardsWith(dt DiseaseType) int {
 	inAll := 0
 	for _, card := range c.All {
 		toCompare := card.City.OriginalDisease
@@ -209,23 +215,32 @@ func (c *CityDeck) ProbabilityOfDrawingType(dt DiseaseType) float64 {
 			inAll--
 		}
 	}
-	return float64(inAll) / (float64(c.Total()) - float64(len(c.Drawn)))
+	return inAll
 }
 
-func (c *CityDeck) Draw(cn CityName) error {
+func (c *CityDeck) Draw(cn CityName) (*CityCard, error) {
 	for _, card := range c.Drawn {
 		if card.City.Name == cn {
-			return fmt.Errorf("%v has already been drawn from the city deck", cn)
+			return nil, fmt.Errorf("%v has already been drawn from the city deck", cn)
 		}
 	}
-	c.ProbabilityModel.DrawCity(len(c.Drawn))
+	c.ProbabilityModel.DrawCity(len(c.Drawn) - len(c.StartCities))
 	for _, card := range c.All {
 		if card.City.Name == cn {
 			c.Drawn = append(c.Drawn, card)
-			return nil
+			return &card, nil
 		}
 	}
-	return fmt.Errorf("No city called %v in the city deck", cn)
+	return nil, fmt.Errorf("No city called %v in the city deck", cn)
+}
+
+func (c *CityDeck) GetCity(cn CityName) (*CityCard, error) {
+	for _, card := range c.All {
+		if card.City.Name == cn {
+			return &card, nil
+		}
+	}
+	return nil, fmt.Errorf("No card named %v in the deck", cn)
 }
 
 func (c *CityDeck) NumFundedEvents() int {
@@ -248,7 +263,7 @@ func (c *CityDeck) DrawFundedEvent() error {
 	if alreadyDrawn >= c.NumFundedEvents() {
 		return fmt.Errorf("Have already drawn %v funded events, cannot draw more", alreadyDrawn)
 	}
-	c.ProbabilityModel.DrawCity(len(c.Drawn))
+	c.ProbabilityModel.DrawCity(len(c.Drawn) - len(c.StartCities))
 	c.Drawn = append(c.Drawn, CityCard{City{}, false, true})
 	return nil
 }
@@ -264,7 +279,7 @@ func (c *CityDeck) DrawEpidemic() error {
 	if drawnEpis >= totalEpis {
 		return fmt.Errorf("Already drawn %v epidemics this game, there shouldn't be any more", drawnEpis)
 	}
-	c.ProbabilityModel.DrawEpidemic(len(c.Drawn))
+	c.ProbabilityModel.DrawEpidemic(len(c.Drawn) - len(c.StartCities))
 	c.Drawn = append(c.Drawn, CityCard{City{}, true, false})
 	return nil
 }
@@ -278,13 +293,13 @@ func (c *CityDeck) DrawEpidemic() error {
 // a probability of epidemic be greater than 1.0. This is entirely possible in
 // the game of Pandemic.
 func (c CityDeck) probabilityOfEpidemic() float64 {
-	index := len(c.Drawn)
+	index := len(c.Drawn) - len(c.StartCities)
 	analysis := c.ProbabilityModel.EpidemicAnalysis(index)
 	return analysis.FirstCardProbability + analysis.SecondCardProbability
 }
 
 func (c CityDeck) EpidemicAnalysis() EpidemicAnalysis {
-	index := len(c.Drawn)
+	index := len(c.Drawn) - len(c.StartCities)
 	return c.ProbabilityModel.EpidemicAnalysis(index)
 }
 

@@ -28,11 +28,11 @@ func TestCardProbabilities(t *testing.T) {
 		t.Fatalf("Should have had a 10%% chance of epidemic, got %v", prob)
 	}
 	t.Log(deck.ProbabilityModel)
-	if err := deck.Draw(deck.All[0].City.Name); err != nil {
+	if _, err := deck.Draw(deck.All[0].City.Name); err != nil {
 		t.Fatal(err)
 	}
 	t.Log(deck.ProbabilityModel)
-	if err := deck.Draw(deck.All[1].City.Name); err != nil {
+	if _, err := deck.Draw(deck.All[1].City.Name); err != nil {
 		t.Fatal(err)
 	}
 	t.Log(deck.ProbabilityModel)
@@ -49,52 +49,63 @@ func TestCardProbabilities(t *testing.T) {
 func getTestCityDeck() CityDeck {
 	cities := []*City{
 		{
-			Name:    "a",
-			Disease: Blue.Type,
+			Name:            "a",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "b",
-			Disease: Blue.Type,
+			Name:            "b",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "c",
-			Disease: Blue.Type,
+			Name:            "c",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "d",
-			Disease: Yellow.Type,
+			Name:            "d",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "e",
-			Disease: Yellow.Type,
+			Name:            "e",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "f",
-			Disease: Yellow.Type,
+			Name:            "f",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "g",
-			Disease: Black.Type,
+			Name:            "g",
+			Disease:         Faded.Type,
+			OriginalDisease: Black.Type,
 		},
 		{
-			Name:    "h",
-			Disease: Black.Type,
+			Name:            "h",
+			Disease:         Faded.Type,
+			OriginalDisease: Black.Type,
 		},
 		{
-			Name:    "i",
-			Disease: Red.Type,
+			Name:            "i",
+			Disease:         Red.Type,
+			OriginalDisease: Red.Type,
 		},
 		{
-			Name:    "j",
-			Disease: Red.Type,
+			Name:            "j",
+			Disease:         Red.Type,
+			OriginalDisease: Red.Type,
 		},
 	}
 	// 1/3 chance of an epidemic on a turn, since
 	// we cut the 10 test cards above into 2 sections (1 for each epi)
-	// and 2 cards are drawn from each set of 5+1.
+	// and 2 cards are drawn from each set of 5+1. There
+	// are no funded events or "players" (ie, nobody gets city cards to start)
 	citiesStr := Cities{}
 	citiesStr.Cities = cities
-	return citiesStr.GenerateCityDeck(2, 0)
+	return citiesStr.GenerateCityDeck(2, 0, 0)
 }
 
 // Generate a deck with 19 cities and 4 epidemics.
@@ -103,84 +114,103 @@ func getTestCityDeck() CityDeck {
 func generateLopsidedCityDeck() CityDeck {
 	cities := Cities{[]*City{
 		{
-			Name:    "a",
-			Disease: Blue.Type,
+			Name:            "a",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "b",
-			Disease: Blue.Type,
+			Name:            "b",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "c",
-			Disease: Blue.Type,
+			Name:            "c",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "d",
-			Disease: Yellow.Type,
+			Name:            "d",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "e",
-			Disease: Yellow.Type,
+			Name:            "e",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "f",
-			Disease: Yellow.Type,
+			Name:            "f",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "g",
-			Disease: Black.Type,
+			Name:            "g",
+			Disease:         Faded.Type,
+			OriginalDisease: Black.Type,
 		},
 		{
-			Name:    "h",
-			Disease: Black.Type,
+			Name:            "h",
+			Disease:         Faded.Type,
+			OriginalDisease: Black.Type,
 		},
 		{
-			Name:    "i",
-			Disease: Red.Type,
+			Name:            "i",
+			Disease:         Red.Type,
+			OriginalDisease: Red.Type,
 		},
 		{
-			Name:    "j",
-			Disease: Red.Type,
+			Name:            "j",
+			Disease:         Red.Type,
+			OriginalDisease: Red.Type,
 		},
 		{
-			Name:    "xa",
-			Disease: Blue.Type,
+			Name:            "xa",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "xb",
-			Disease: Blue.Type,
+			Name:            "xb",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "xc",
-			Disease: Blue.Type,
+			Name:            "xc",
+			Disease:         Blue.Type,
+			OriginalDisease: Blue.Type,
 		},
 		{
-			Name:    "xd",
-			Disease: Yellow.Type,
+			Name:            "xd",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "xe",
-			Disease: Yellow.Type,
+			Name:            "xe",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "xf",
-			Disease: Yellow.Type,
+			Name:            "xf",
+			Disease:         Yellow.Type,
+			OriginalDisease: Yellow.Type,
 		},
 		{
-			Name:    "xg",
-			Disease: Black.Type,
+			Name:            "xg",
+			Disease:         Black.Type,
+			OriginalDisease: Black.Type,
 		},
 		{
-			Name:    "xh",
-			Disease: Black.Type,
+			Name:            "xh",
+			Disease:         Black.Type,
+			OriginalDisease: Black.Type,
 		},
 		{
-			Name:    "xi",
-			Disease: Black.Type,
+			Name:            "xi",
+			Disease:         Black.Type,
+			OriginalDisease: Black.Type,
 		},
 	}}
 
-	return cities.GenerateCityDeck(4, 0)
+	return cities.GenerateCityDeck(4, 0, 0)
 }
 
 type testState struct {
@@ -210,7 +240,8 @@ var infectTests = []testExpectation{
 			},
 		},
 		infectProbabilities: map[string]float64{
-			"a": 0.2, // 2 draws out of 10, 1/5 chance
+			"a": 0.2,  // 2 draws out of 10, 1/5 chance
+			"g": 0.29, // 2 draws out of 10  plus one 1/11 from the city deck, because it's faded
 		},
 	},
 	{
@@ -305,5 +336,29 @@ func TestRunInfectTests(t *testing.T) {
 				t.Errorf("In scenario '%v', %v did not have expected probability: wanted %v, got %v\n", infectTest.scenario, city, expected, actual)
 			}
 		}
+	}
+}
+
+func TestSortByInfect(t *testing.T) {
+	cities := Cities{
+		Cities: []*City{
+			{
+				Name:          "a",
+				NumInfections: 2,
+			},
+			{
+				Name:          "b",
+				NumInfections: 3,
+			},
+			{
+				Name:          "c",
+				NumInfections: 1,
+			},
+		},
+	}
+	gameState := GameState{Cities: &cities}
+	sorted := gameState.SortBySeverity([]CityName{"a", "b", "c"})
+	if len(sorted) != 3 || sorted[0] != "b" || sorted[1] != "a" || sorted[2] != "c" {
+		t.Fatalf("Incorrect order: %+v", sorted)
 	}
 }

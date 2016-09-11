@@ -15,10 +15,11 @@ const (
 )
 
 type Player struct {
-	HumanName string `json:"human_name"`
-	Character *Character
-	Location  CityName
-	Cities    []CityCard
+	HumanName   string `json:"human_name"`
+	Character   *Character
+	Location    CityName
+	StartCities []CityName `json:"start_cities"`
+	Cities      []*CityCard
 }
 
 type Character struct {

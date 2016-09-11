@@ -2,7 +2,14 @@ def x!(cmd)
 	system(cmd) || abort("Could not run #{cmd}")
 end
 
-task :default do
+task :install do
 	x!("go install ./...")
+end
+
+task :test do
+	x!("go test ./...")
+end
+
+task :default => :install do
 	exec "pandemic-nerd-hurd start --month jan --funded-events 4"
 end

@@ -22,6 +22,20 @@ func getCityNameByPrefix(entry string, gs *pandemic.GameState) (pandemic.CityNam
 	return city.Name, nil
 }
 
+func getPlayerByPrefix(entry string, gs *pandemic.GameState) (*pandemic.Player, error) {
+	var ret *pandemic.Player
+	for _, player := range gs.GameTurns.PlayerOrder {
+		if strings.HasPrefix(strings.ToLower(player.HumanName), strings.ToLower(entry)) {
+			if ret != nil {
+				return nil, fmt.Errorf("%v is an ambiguous human name", entry)
+			} else {
+				ret = player
+			}
+		}
+	}
+	return ret, nil
+}
+
 func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *gocui.View, commandView *gocui.View) error {
 	commandBuffer := strings.Trim(commandView.Buffer(), "\n\t\r ")
 	if commandBuffer == "" {
@@ -33,6 +47,12 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 	commandArgs := strings.Split(commandBuffer, " ")
 	cmd := commandArgs[0]
 
+	curTurn, err := gameState.GameTurns.CurrentTurn()
+	if err != nil {
+		return err
+	}
+	curPlayer := curTurn.Player
+
 	switch cmd {
 	case "infect", "i":
 		if len(commandArgs) != 2 {
@@ -41,28 +61,62 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 		}
 		city, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		}
 		err = gameState.Infect(city)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 		} else {
 			fmt.Fprintf(consoleView, "Infected %v\n", city)
 		}
+	case "next-turn", "n":
+		turn, err := gameState.NextTurn()
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning("Could not move on to next turn: %v", err))
+		} else {
+			fmt.Fprintf(consoleView, "It is now %v's turn\n", turn.Player.HumanName)
+		}
+	case "give-card", "g":
+		if len(commandArgs) != 3 {
+			fmt.Fprintln(consoleView, p.colorWarning("Usage: give-card <human-prefix> <city-prefix>"))
+			break
+		}
+		from, err := gameState.GameTurns.CurrentTurn()
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
+			break
+		}
+		to, err := getPlayerByPrefix(commandArgs[1], gameState)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
+			break
+		}
+		cityName, err := getCityNameByPrefix(commandArgs[2], gameState)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
+			break
+		}
+		err = gameState.ExchangeCard(from.Player, to, cityName)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
+			break
+		} else {
+			fmt.Fprintf(consoleView, "%v gave %v to %v\n", from.Player.HumanName, cityName, to.HumanName)
+		}
 	case "epidemic", "e":
 		if len(commandArgs) != 2 {
-			fmt.Fprintln(consoleView, p.colorWarning("You must pass a city to the epidemic command.\n"))
+			fmt.Fprintln(consoleView, p.colorWarning("You must pass a city to the epidemic command."))
 			break
 		}
 		city, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		}
 		err = gameState.Epidemic(city)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		} else {
 			fmt.Fprintf(consoleView, "Epidemic in %v. Please update the infect rate (infect-rate N)\n", city)
@@ -91,7 +145,7 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 		}
 		cityName, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		}
 		city, err := gameState.GetCity(cityName)
@@ -108,19 +162,19 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 		}
 		city, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		}
-		err = gameState.CityDeck.Draw(city)
+		err = gameState.DrawCity(city)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		}
-		fmt.Fprintf(consoleView, "Drew %v from city deck\n", city)
+		fmt.Fprintf(consoleView, "%v drew %v from city deck\n", curPlayer.HumanName, city)
 	case "funded-event", "f":
-		err := gameState.CityDeck.DrawFundedEvent()
+		err := gameState.DrawFundedEvent()
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		}
 		fmt.Fprintln(consoleView, "Drew a funded event")
@@ -131,7 +185,7 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 		}
 		cityName, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		}
 		err = gameState.Quarantine(cityName)
@@ -140,13 +194,35 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 		} else {
 			fmt.Fprintf(consoleView, "Quarantined %v\n", cityName)
 		}
+	case "discard", "d":
+		if len(commandArgs) != 2 {
+			fmt.Fprintln(consoleView, p.colorWarning("discard must be called with a city name"))
+			break
+		}
+		cityName, err := getCityNameByPrefix(commandArgs[1], gameState)
+		if err != nil {
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
+			break
+		}
+		filtered := []*pandemic.CityCard{}
+		for _, card := range curPlayer.Cities {
+			if card.City.Name != cityName {
+				filtered = append(filtered, card)
+			}
+		}
+		if len(filtered) == len(curPlayer.Cities) {
+			fmt.Fprintln(consoleView, p.colorWarning("%v does not seem to have %v\n", curPlayer.HumanName, cityName))
+			break
+		}
+		curPlayer.Cities = filtered
+		fmt.Fprintf(consoleView, "%v discarded %v\n", curPlayer.HumanName, cityName)
 	case "remove-quarantine", "rq":
 		if len(commandArgs) != 2 {
 			fmt.Fprintf(consoleView, p.colorWarning("remove-quarantine must be called with a city name"))
 		}
 		cityName, err := getCityNameByPrefix(commandArgs[1], gameState)
 		if err != nil {
-			fmt.Fprintln(consoleView, p.colorWarning(err))
+			fmt.Fprintln(consoleView, p.colorWarning("%v", err))
 			break
 		}
 		err = gameState.RemoveQuarantine(cityName)
@@ -161,7 +237,7 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 	}
 
 	filename := filepath.Join(gameState.GameName, fmt.Sprintf("game_%v_%v.json", time.Now().UnixNano(), cmd))
-	err := os.MkdirAll(gameState.GameName, 0755)
+	err = os.MkdirAll(gameState.GameName, 0755)
 	if err != nil {
 		fmt.Fprintf(consoleView, p.colorOhFuck(fmt.Sprintf("Could not create a game name folder: %v", err)))
 	}

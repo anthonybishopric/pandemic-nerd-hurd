@@ -3,10 +3,11 @@ package pandemic
 type DiseaseType string
 
 type DiseaseData struct {
-	Type          DiseaseType `json:"type"`
-	Incurable     bool        `json:"incurable,omitempty"`
-	Untreatable   bool        `json:"untreatable,omitempty"`
-	BecomingFaded bool        `json:"becoming_faded,omitempty"`
+	Type             DiseaseType `json:"type"`
+	Incurable        bool        `json:"incurable,omitempty"`
+	Untreatable      bool        `json:"untreatable,omitempty"`
+	BecomingFaded    bool        `json:"becoming_faded,omitempty"`
+	InfectOnCityDraw bool        `json:"infect_on_city_draw,omitempty"`
 }
 
 var Yellow = DiseaseData{
@@ -25,8 +26,39 @@ var Black = DiseaseData{
 	Type: DiseaseType("Black"),
 }
 var Faded = DiseaseData{
-	Type:          DiseaseType("Faded"),
-	Incurable:     true,
-	Untreatable:   true,
-	BecomingFaded: true,
+	Type:             DiseaseType("Faded"),
+	Incurable:        true,
+	Untreatable:      true,
+	BecomingFaded:    true,
+	InfectOnCityDraw: true,
+}
+
+func (dt DiseaseType) String() string {
+	return string(dt)
+}
+
+var diseaseDataMap map[DiseaseType]DiseaseData
+
+func init() {
+	diseaseDataMap = map[DiseaseType]DiseaseData{
+		Yellow.Type: Yellow,
+		Blue.Type:   Blue,
+		Red.Type:    Red,
+		Black.Type:  Black,
+		Faded.Type:  Faded,
+	}
+}
+
+func DataForDisease(dt DiseaseType) DiseaseData {
+	return diseaseDataMap[dt]
+}
+
+func CurableDiseases() []DiseaseType {
+	ret := []DiseaseType{}
+	for dt, data := range diseaseDataMap {
+		if !data.Incurable {
+			ret = append(ret, dt)
+		}
+	}
+	return ret
 }

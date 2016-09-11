@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -12,21 +13,23 @@ import (
 )
 
 type PandemicView struct {
-	logger          *logrus.Logger
-	colorAllGood    func(...interface{}) string
-	colorWarning    func(...interface{}) string
-	colorHighlight  func(...interface{}) string
-	colorOhFuck     func(...interface{}) string
-	fileSaveCounter int
+	logger              *logrus.Logger
+	colorWhiteHighlight func(string, ...interface{}) string
+	colorAllGood        func(string, ...interface{}) string
+	colorWarning        func(string, ...interface{}) string
+	colorHighlight      func(string, ...interface{}) string
+	colorOhFuck         func(string, ...interface{}) string
+	fileSaveCounter     int
 }
 
 func NewView(logger *logrus.Logger) *PandemicView {
 	return &PandemicView{
-		logger:         logger,
-		colorAllGood:   color.New(color.FgGreen).Add(color.BgBlack).SprintFunc(),
-		colorWarning:   color.New(color.FgYellow).Add(color.BgBlack).SprintFunc(),
-		colorHighlight: color.New(color.FgRed).SprintFunc(),
-		colorOhFuck:    color.New(color.FgBlack).Add(color.BgRed).Add(color.BlinkSlow).SprintFunc(),
+		logger:              logger,
+		colorWhiteHighlight: color.New(color.FgBlack).Add(color.BgWhite).SprintfFunc(),
+		colorAllGood:        color.New(color.FgGreen).Add(color.BgBlack).SprintfFunc(),
+		colorWarning:        color.New(color.FgYellow).Add(color.BgBlack).SprintfFunc(),
+		colorHighlight:      color.New(color.FgRed).SprintfFunc(),
+		colorOhFuck:         color.New(color.FgBlack).Add(color.BgRed).Add(color.BlinkSlow).SprintfFunc(),
 	}
 }
 
@@ -43,7 +46,7 @@ func (p *PandemicView) Start(game *pandemic.GameState) {
 
 		p.renderCommandsView(game, gui, width)
 		p.renderStriations(game, gui, 2, height/2, width)
-		p.renderTurnStatus(game, gui, 0, height/2, width/2, height)
+		p.renderCityDeckAndTurns(game, gui, 0, height/2, width/2, height)
 		p.renderConsoleArea(game, gui, width/2, height/2, width, height)
 
 		p.setUpKeyBindings(game, gui, "Commands")
@@ -70,34 +73,93 @@ func (p *PandemicView) renderCommandsView(game *pandemic.GameState, gui *gocui.G
 	commandView.Title = "Commands"
 }
 
-func (p *PandemicView) renderTurnStatus(game *pandemic.GameState, gui *gocui.Gui, topX, topY, bottomX, bottomY int) {
-	turnView, err := gui.SetView("Turns", topX, topY, bottomX, bottomY)
+func (p *PandemicView) renderCityDeckAndTurns(game *pandemic.GameState, gui *gocui.Gui, topX, topY, bottomX, bottomY int) {
+	cityView, err := gui.SetView("Cities", topX, topY, bottomX, topY+(bottomY-topY)/2)
+	p.logger.Infoln(topX, topY, bottomX, topY+(bottomY-topY)/2)
+	if err != nil && err != gocui.ErrUnknownView {
+		gui.Close()
+		p.logger.Fatalf("Could not render city deck view: %v %v %v %v %v", err, topX, topY, bottomX, topY+(bottomY-topY)/2)
+	}
+	cityView.Clear()
+	cityView.Title = "City Deck"
+	cityView.Editable = false
+	analysis := game.CityDeck.EpidemicAnalysis()
+	total := analysis.FirstCardProbability + analysis.SecondCardProbability
+
+	fmt.Fprintf(cityView, "\U0001F912 \U0001F4A5  %.2f (%v)\n", total, p.fractionalize(total))
+	scenarioGuarantee := fmt.Sprintf("%v of %v Scenarios Guarantee Epidemic", analysis.ScenariosWith100, analysis.PossibleScenarios)
+	if analysis.ScenariosWith100 > 0 {
+		scenarioGuarantee = p.colorOhFuck(scenarioGuarantee)
+	}
+	fmt.Fprintln(cityView, scenarioGuarantee)
+
+	fmt.Fprintf(cityView, "Epidemic on First City: %v\n", p.colorEpidemicPercent(analysis.FirstCardProbability))
+	fmt.Fprintf(cityView, "Epidemic on Second City: %v\n", p.colorEpidemicPercent(analysis.SecondCardProbability))
+	fmt.Fprintf(cityView, " -> After First City Epidemic: %v\n", p.colorEpidemicPercent(analysis.SecondCardEpiAfterFirstEpi))
+
+	fmt.Fprintf(cityView, "Upcoming Draws Guaranteed Safe: %v\n", p.colorUpcomingSafeCount(analysis.ComingDrawsWith0))
+
+	fmt.Fprintf(cityView, "Draw Chance %v  %.2f  ", p.iconFor(pandemic.Black.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Black.Type))
+	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Red.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Red.Type))
+	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Blue.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Blue.Type))
+	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Yellow.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Yellow.Type))
+	fmt.Fprintf(cityView, "%v  %.2f\n", p.iconFor(pandemic.Faded.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Faded.Type))
+
+	turnView, err := gui.SetView("Turns", topX, topY+(bottomY-topY)/2, bottomX, bottomY)
 	if err != nil && err != gocui.ErrUnknownView {
 		gui.Close()
 		p.logger.Fatalf("Could not render turn view: %v", err)
 	}
 	turnView.Clear()
-	turnView.Title = "Turns & Cities"
 	turnView.Editable = false
-	analysis := game.CityDeck.EpidemicAnalysis()
-	total := analysis.FirstCardProbability + analysis.SecondCardProbability
-	fmt.Fprintf(turnView, "Probability of epidemic: %v\n", p.fractionalize(total))
-	scenarioGuarantee := fmt.Sprintf("%v of %v Scenarios Guarantee Epidemic", analysis.ScenariosWith100, analysis.PossibleScenarios)
-	if analysis.ScenariosWith100 > 0 {
-		scenarioGuarantee = p.colorOhFuck(scenarioGuarantee)
+	turnView.Title = "Players"
+
+	cur, err := game.GameTurns.CurrentTurn()
+	if err != nil {
+		p.logger.Fatalln(err)
 	}
-	fmt.Fprintln(turnView, scenarioGuarantee)
+	for _, player := range game.GameTurns.PlayerOrder {
+		if cur.Player == player {
+			fmt.Fprint(turnView, p.colorWhiteHighlight(player.HumanName))
+		} else {
+			fmt.Fprint(turnView, player.HumanName[:1])
+		}
+		fmt.Fprint(turnView, " ")
+	}
+	fmt.Fprintln(turnView)
 
-	fmt.Fprintf(turnView, "Epidemic on First City: %v\n", p.colorEpidemicPercent(analysis.FirstCardProbability))
-	fmt.Fprintf(turnView, "Epidemic on Second City: %v\n", p.colorEpidemicPercent(analysis.SecondCardProbability))
-	fmt.Fprintf(turnView, " -> After First City Epidemic: %v\n", p.colorEpidemicPercent(analysis.SecondCardEpiAfterFirstEpi))
-	fmt.Fprintf(turnView, "Upcoming Draws Guaranteed Safe: %v\n", p.colorUpcomingSafeCount(analysis.ComingDrawsWith0))
-	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Black.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Black.Type))
-	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Red.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Red.Type))
-	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Blue.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Blue.Type))
-	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Yellow.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Yellow.Type))
-	fmt.Fprintf(turnView, "Drawing city card %v  %.2f\n", p.iconFor(pandemic.Faded.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Faded.Type))
+	// print all cards
+	fmt.Fprint(turnView, "Cards: ")
+	for _, card := range cur.Player.Cities {
+		fmt.Fprintf(turnView, "%v  %v ", p.iconFor(card.City.Disease), card.City.Name[:4])
+	}
+	fmt.Fprintln(turnView, "\nCure Likelihood: ")
 
+	// print curability stats
+	curability := byCurability{pandemic.CurableDiseases(), make(map[pandemic.DiseaseType]float64), make(map[pandemic.DiseaseType]maxCurability)}
+	for _, dt := range pandemic.CurableDiseases() {
+		playerProb := game.ProbabilityOfCuring(cur.Player, dt)
+		curability.curability[dt] = playerProb
+		curability.maxCurability[dt] = maxCurability{playerProb, cur.Player}
+		for _, player := range game.GameTurns.PlayerOrder {
+			if player.HumanName != cur.Player.HumanName {
+				otherPlayerProb := game.ProbabilityOfCuring(player, dt)
+				if otherPlayerProb > playerProb {
+					curability.maxCurability[dt] = maxCurability{otherPlayerProb, player}
+					playerProb = otherPlayerProb
+				}
+			}
+		}
+	}
+	sort.Sort(curability)
+	for _, dt := range curability.dts {
+		max := curability.maxCurability[dt]
+		maxStr := ""
+		if max.player.HumanName != cur.Player.HumanName {
+			maxStr = fmt.Sprintf("(%v %v)", max.player.HumanName, p.colorProbabilityOfCure(max.prob))
+		}
+		fmt.Fprintf(turnView, "%v  \U00002697  %v %v \n", p.iconFor(dt), p.colorProbabilityOfCure(curability.curability[dt]), maxStr)
+	}
 }
 
 func (p *PandemicView) iconFor(dt pandemic.DiseaseType) string {
@@ -228,7 +290,7 @@ func (p *PandemicView) renderStriations(game *pandemic.GameState, gui *gocui.Gui
 		}
 		strView.Clear()
 		strView.Title = strName
-		cityNames = game.Cities.SortByInfectionLevel(cityNames)
+		cityNames = game.SortBySeverity(cityNames)
 		for _, city := range cityNames {
 			p.terminateIfErr(p.printCityWithProb(game, strView, city), "Could not render city", gui)
 		}

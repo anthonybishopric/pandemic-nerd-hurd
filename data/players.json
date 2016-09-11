@@ -1,0 +1,18 @@
+[
+	{
+		"human_name": "Anthony",
+		"start_cities": ["sanfrancisco", "madrid"]
+	},
+	{
+		"human_name": "Benji",
+		"start_cities": ["sydney", "moscow"]
+	},
+	{
+		"human_name": "MacRae",
+		"start_cities": ["bogota", "mexicocity"]
+	},
+	{
+		"human_name": "Will",
+		"start_cities": ["osaka", "essen"]
+	}
+]

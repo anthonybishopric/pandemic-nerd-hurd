@@ -16,14 +16,14 @@ type Turn struct {
 }
 
 func (t *GameTurns) AddPlayer(p *Player) error {
-	for _, existing := range t.PlayerOrder {
-		if existing.Character.Type == p.Character.Type {
-			return fmt.Errorf("The %v has already been added to the game", p.Character.Type)
-		}
-		if existing.HumanName == p.HumanName {
-			return fmt.Errorf("%v has already been added to the game", p.HumanName)
-		}
-	}
+	// for _, existing := range t.PlayerOrder {
+	// 	if existing.Character.Type == p.Character.Type {
+	// 		return fmt.Errorf("%v cannot be %v because %v already been added to the game by %v", p.HumanName, p.Character.Type, p.Character.Type, existing.HumanName)
+	// 	}
+	// 	if existing.HumanName == p.HumanName {
+	// 		return fmt.Errorf("%v has already been added to the game", p.HumanName)
+	// 	}
+	// }
 	t.PlayerOrder = append(t.PlayerOrder, p)
 	if len(t.PlayerOrder) == 1 {
 		t.Turns = append(t.Turns, t.addTurn()) // create the first turn once we have a player
@@ -54,10 +54,26 @@ func (t *GameTurns) addTurn() *Turn {
 	}
 }
 
-func InitGameTurns() *GameTurns {
-	return &GameTurns{
+func (t *GameTurns) AddDrawnToCurrent(card *CityCard) error {
+	turn, err := t.CurrentTurn()
+	if err != nil {
+		return err
+	}
+	if len(turn.DrawnCities) == CityCardsPerTurn {
+		return fmt.Errorf("Already drew %v cards this turn", CityCardsPerTurn)
+	}
+	turn.DrawnCities = append(turn.DrawnCities, card.City.Name)
+	return nil
+}
+
+func InitGameTurns(ps ...*Player) *GameTurns {
+	turns := &GameTurns{
 		0,
 		[]*Player{},
 		[]*Turn{},
 	}
+	for _, p := range ps {
+		turns.AddPlayer(p)
+	}
+	return turns
 }
