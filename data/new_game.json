@@ -1,4 +1,27 @@
 {
+    "players": [
+        {
+            "human_name": "Anthony",
+            "start_cards": ["sanfrancisco", "madrid"]
+        },
+        {
+            "human_name": "Benji",
+            "start_cards": ["sydney", "moscow"]
+        },
+        {
+            "human_name": "MacRae",
+            "start_cards": ["bogota", "mexicocity"]
+        },
+        {
+            "human_name": "Will",
+            "start_cards": ["osaka", "essen"]
+        }
+    ],
+    "funded_events": [
+        {
+            "name": "silentnight"
+        }
+    ],
     "cities": [
         {
             "name":    "sanfrancisco",

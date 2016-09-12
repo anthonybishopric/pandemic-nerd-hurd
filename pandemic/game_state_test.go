@@ -9,10 +9,10 @@ import (
 func getNumCards(count int, numEpis int) []CityCard {
 	cards := make([]CityCard, count)
 	for x := 0; x < count-numEpis; x++ {
-		cards[x] = CityCard{City{Name: CityName(fmt.Sprintf("testCity%v", x))}, false, false}
+		cards[x] = CityCard{CityName(fmt.Sprintf("testCity%v", x)), false, ""}
 	}
 	for x := count - numEpis; x < count; x++ {
-		cards[x] = CityCard{City{}, true, false}
+		cards[x] = CityCard{"", true, ""}
 	}
 	return cards
 }
@@ -28,25 +28,25 @@ func TestCardProbabilities(t *testing.T) {
 		t.Fatalf("Should have had a 10%% chance of epidemic, got %v", prob)
 	}
 	t.Log(deck.ProbabilityModel)
-	if _, err := deck.Draw(deck.All[0].City.Name); err != nil {
+	if _, err := deck.DrawCard(deck.All[0].Name()); err != nil {
 		t.Fatal(err)
 	}
 	t.Log(deck.ProbabilityModel)
-	if _, err := deck.Draw(deck.All[1].City.Name); err != nil {
+	if _, err := deck.DrawCard(deck.All[1].Name()); err != nil {
 		t.Fatal(err)
 	}
 	t.Log(deck.ProbabilityModel)
 	if prob := deck.probabilityOfEpidemic(); prob != 1.0/9.0 {
 		t.Fatalf("Should have had a %.4f probability of epidemic, got %.4f", 1.0/9.0, prob)
 	}
-	deck.Draw(deck.All[2].City.Name)
+	deck.DrawCard(deck.All[2].Name())
 	deck.DrawEpidemic()
 	if prob := deck.probabilityOfEpidemic(); prob != 0 {
 		t.Fatalf("Should have had a 0%% probability of epidemic, got %v", prob)
 	}
 }
 
-func getTestCityDeck() CityDeck {
+func getTestCityDeck() (Cities, CityDeck, error) {
 	cities := []*City{
 		{
 			Name:            "a",
@@ -103,16 +103,16 @@ func getTestCityDeck() CityDeck {
 	// we cut the 10 test cards above into 2 sections (1 for each epi)
 	// and 2 cards are drawn from each set of 5+1. There
 	// are no funded events or "players" (ie, nobody gets city cards to start)
-	citiesStr := Cities{}
-	citiesStr.Cities = cities
-	return citiesStr.GenerateCityDeck(2, 0, 0)
+	citiesStr := Cities(cities)
+	deck, err := citiesStr.GenerateCityDeck(2, []*FundedEvent{}, Set{})
+	return citiesStr, deck, err
 }
 
 // Generate a deck with 19 cities and 4 epidemics.
 // This means 3 striations of cities will contain
 // 6 cards and 1 striation will contain 5.
-func generateLopsidedCityDeck() CityDeck {
-	cities := Cities{[]*City{
+func generateLopsidedCityDeck() (Cities, CityDeck, error) {
+	cities := Cities([]*City{
 		{
 			Name:            "a",
 			Disease:         Blue.Type,
@@ -208,9 +208,10 @@ func generateLopsidedCityDeck() CityDeck {
 			Disease:         Black.Type,
 			OriginalDisease: Black.Type,
 		},
-	}}
+	})
 
-	return cities.GenerateCityDeck(4, 0, 0)
+	deck, err := cities.GenerateCityDeck(4, []*FundedEvent{}, Set{})
+	return cities, deck, err
 }
 
 type testState struct {
@@ -249,10 +250,10 @@ var infectTests = []testExpectation{
 		state: testState{
 			infectRate: 2,
 			cityCustom: func(deck *CityDeck) {
-				deck.Draw("a")
-				deck.Draw("b")
-				deck.Draw("c")
-				deck.Draw("d")
+				deck.DrawCard("a")
+				deck.DrawCard("b")
+				deck.DrawCard("c")
+				deck.DrawCard("d")
 				// now have 2 cards left in this striation, 100% chance of epidemic
 			},
 			infectCustom: func(deck *InfectionDeck) {
@@ -269,8 +270,8 @@ var infectTests = []testExpectation{
 		state: testState{
 			infectRate: 2,
 			cityCustom: func(deck *CityDeck) {
-				deck.Draw("a")
-				deck.Draw("b")
+				deck.DrawCard("a")
+				deck.DrawCard("b")
 				// 4 cards left in striation, 50% chance of epidemic
 			},
 			infectCustom: func(deck *InfectionDeck) {
@@ -305,21 +306,17 @@ func TestRunInfectTests(t *testing.T) {
 	for _, infectTest := range infectTests {
 		// SETUP
 		gs := GameState{}
-		cityDeck := getTestCityDeck()
+		cities, cityDeck, err := getTestCityDeck()
 		if infectTest.state.lopsided {
-			cityDeck = generateLopsidedCityDeck()
+			cities, cityDeck, err = generateLopsidedCityDeck()
+		}
+		if err != nil {
+			t.Fatal(err)
 		}
 		if infectTest.state.cityCustom != nil {
 			infectTest.state.cityCustom(&cityDeck)
 		}
-		cities := []*City{}
-		for _, city := range cityDeck.All {
-			if !city.IsEpidemic {
-				city := city
-				cities = append(cities, &city.City)
-			}
-		}
-		gs.Cities = &Cities{Cities: cities}
+		gs.Cities = &cities
 		gs.CityDeck = &cityDeck
 		gs.InfectionRate = infectTest.state.infectRate
 		infectDeck := NewInfectionDeck(gs.Cities.CityNames())
@@ -340,22 +337,21 @@ func TestRunInfectTests(t *testing.T) {
 }
 
 func TestSortByInfect(t *testing.T) {
-	cities := Cities{
-		Cities: []*City{
-			{
-				Name:          "a",
-				NumInfections: 2,
-			},
-			{
-				Name:          "b",
-				NumInfections: 3,
-			},
-			{
-				Name:          "c",
-				NumInfections: 1,
-			},
+	cities := Cities([]*City{
+		{
+			Name:          "a",
+			NumInfections: 2,
 		},
-	}
+		{
+			Name:          "b",
+			NumInfections: 3,
+		},
+		{
+			Name:          "c",
+			NumInfections: 1,
+		},
+	},
+	)
 	gameState := GameState{Cities: &cities}
 	sorted := gameState.SortBySeverity([]CityName{"a", "b", "c"})
 	if len(sorted) != 3 || sorted[0] != "b" || sorted[1] != "a" || sorted[2] != "c" {

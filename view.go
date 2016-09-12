@@ -99,11 +99,11 @@ func (p *PandemicView) renderCityDeckAndTurns(game *pandemic.GameState, gui *goc
 
 	fmt.Fprintf(cityView, "Upcoming Draws Guaranteed Safe: %v\n", p.colorUpcomingSafeCount(analysis.ComingDrawsWith0))
 
-	fmt.Fprintf(cityView, "Draw Chance %v  %.2f  ", p.iconFor(pandemic.Black.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Black.Type))
-	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Red.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Red.Type))
-	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Blue.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Blue.Type))
-	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Yellow.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Yellow.Type))
-	fmt.Fprintf(cityView, "%v  %.2f\n", p.iconFor(pandemic.Faded.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Faded.Type))
+	fmt.Fprintf(cityView, "Draw Chance %v  %.2f  ", p.iconFor(pandemic.Black.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Black.Type, game.Cities))
+	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Red.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Red.Type, game.Cities))
+	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Blue.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Blue.Type, game.Cities))
+	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Yellow.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Yellow.Type, game.Cities))
+	fmt.Fprintf(cityView, "%v  %.2f\n", p.iconFor(pandemic.Faded.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Faded.Type, game.Cities))
 
 	turnView, err := gui.SetView("Turns", topX, topY+(bottomY-topY)/2, bottomX, bottomY)
 	if err != nil && err != gocui.ErrUnknownView {
@@ -130,8 +130,13 @@ func (p *PandemicView) renderCityDeckAndTurns(game *pandemic.GameState, gui *goc
 
 	// print all cards
 	fmt.Fprint(turnView, "Cards: ")
-	for _, card := range cur.Player.Cities {
-		fmt.Fprintf(turnView, "%v  %v ", p.iconFor(card.City.Disease), card.City.Name[:4])
+	for _, card := range cur.Player.Cards {
+		if card.IsCity() {
+			city, _ := game.Cities.GetCity(card.CityName)
+			fmt.Fprintf(turnView, "%v  %v ", p.iconFor(city.Disease), card.CityName[:4])
+		} else if card.IsFundedEvent() {
+			fmt.Fprintf(turnView, "\U0001F4B8  %v ", card.FundedEventName)
+		}
 	}
 	fmt.Fprintln(turnView, "\nCure Likelihood: ")
 

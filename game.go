@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	app         = kingpin.New("pandemic–nerd-hurd", "Start a nerd herd game")
-	startCmd    = app.Command("start", "Start a new game")
-	startCities = startCmd.Flag("cities-file", "The file containing initial data about Cities").Default("data/cities.json").ExistingFile()
-	startMonth  = startCmd.Flag("month", "The name of the month in the game we are playing. If playing the second time in a month, add '2' after the name").Required().Enum(
+	app              = kingpin.New("pandemic–nerd-hurd", "Start a nerd herd game")
+	startCmd         = app.Command("start", "Start a new game")
+	startNewGameFile = startCmd.Flag("new-game-file", "The file containing initial data about Cities, Players and Funded Events.").Default("data/new_game.json").ExistingFile()
+	startMonth       = startCmd.Flag("month", "The name of the month in the game we are playing. If playing the second time in a month, add '2' after the name").Required().Enum(
 		"jan",
 		"feb",
 		"mar",
@@ -40,10 +40,8 @@ var (
 		"nov2",
 		"dec2",
 	)
-	startNumFundedEvents = startCmd.Flag("funded-events", "The number of funded events present in the city deck.").Required().Int()
-	startPlayerFile      = startCmd.Flag("players-file", "Player metadata describing who will be playing as which characters and in what order.").Default("data/players.json").ExistingFile()
-	loadCmd              = app.Command("load", "Load a game from an existing saved game")
-	loadFile             = loadCmd.Flag("file", "The JSON file containing the game state").Required().ExistingFile()
+	loadCmd  = app.Command("load", "Load a game from an existing saved game")
+	loadFile = loadCmd.Flag("file", "The JSON file containing the game state").Required().ExistingFile()
 )
 
 func main() {
@@ -58,7 +56,7 @@ func main() {
 
 	switch cmd {
 	case "start":
-		gameState, err = pandemic.NewGame(filepath.Join(wd, *startCities), *startMonth, *startNumFundedEvents, *startPlayerFile)
+		gameState, err = pandemic.NewGame(filepath.Join(wd, *startNewGameFile), *startMonth)
 		if err != nil {
 			logger.Fatalln(err)
 		}

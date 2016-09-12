@@ -6,9 +6,35 @@ import (
 )
 
 type CityName string
+type CardName string
+type FundedEventName string
 
 func (c CityName) String() string {
 	return string(c)
+}
+
+func (c CityName) Empty() bool {
+	return string(c) == ""
+}
+
+func (c CityName) CardName() CardName {
+	return CardName(c)
+}
+
+func (c FundedEventName) String() string {
+	return string(c)
+}
+
+func (c FundedEventName) Empty() bool {
+	return string(c) == ""
+}
+
+func (c CardName) String() string {
+	return string(c)
+}
+
+func (c CardName) Empty() bool {
+	return string(c) == ""
 }
 
 type CityDeck struct {
@@ -19,9 +45,9 @@ type CityDeck struct {
 }
 
 type CityCard struct {
-	City          City
-	IsEpidemic    bool `json:"is_epidemic"`
-	IsFundedEvent bool `json:"is_funded_event"`
+	CityName        CityName        `json:"city_name,omitempty"`
+	IsEpidemic      bool            `json:"is_epidemic"`
+	FundedEventName FundedEventName `json:"funded_event_name,omitempty"`
 }
 
 type City struct {
@@ -34,28 +60,44 @@ type City struct {
 	Quarantined     bool        `json:"quarantined"`
 }
 
-type Cities struct {
-	Cities []*City `json:"cities"`
-}
+type Cities []*City
 
 type byInfectionRate struct {
 	names  []CityName
 	cities *Cities
 }
 
+func (c CityCard) Name() CardName {
+	if c.IsCity() {
+		return CardName(c.CityName)
+	}
+	if c.IsFundedEvent() {
+		return CardName(c.FundedEventName)
+	}
+	return "epidemic"
+}
+
+func (c CityCard) IsCity() bool {
+	return !c.CityName.Empty()
+}
+
+func (c CityCard) IsFundedEvent() bool {
+	return !c.FundedEventName.Empty()
+}
+
 // TODO: model city specializations / unfunded events
 // TODO: funded events + epidemics should be named for drawing. If the initial hands
 // contain funded events, all cure stats will be wrong.
-func (c *Cities) GenerateCityDeck(epidemicCount int, fundedEventCount int, startCities Set) (CityDeck, error) {
+func (c Cities) GenerateCityDeck(epidemicCount int, events []*FundedEvent, startCities Set) (CityDeck, error) {
 	cards := []CityCard{}
-	for _, city := range c.Cities {
-		cards = append(cards, CityCard{*city, false, false})
+	for _, city := range c {
+		cards = append(cards, CityCard{city.Name, false, ""})
 	}
 	for i := 0; i < epidemicCount; i++ {
-		cards = append(cards, CityCard{City{}, true, false})
+		cards = append(cards, CityCard{"", true, ""})
 	}
-	for i := 0; i < fundedEventCount; i++ {
-		cards = append(cards, CityCard{City{}, false, true})
+	for _, event := range events {
+		cards = append(cards, CityCard{"", false, event.Name})
 	}
 
 	probModel := generateProbabilityModel(len(cards)-startCities.Size(), epidemicCount)
@@ -78,15 +120,15 @@ func (c *Cities) GenerateCityDeck(epidemicCount int, fundedEventCount int, start
 	return deck, nil
 }
 
-func (c *Cities) GetCityByPrefix(prefix string) (*City, error) {
+func (c Cities) GetCityByPrefix(prefix string) (*City, error) {
 	var ret *City
-	for _, c := range c.Cities {
-		c := c
-		if strings.HasPrefix(strings.ToLower(string(c.Name)), strings.ToLower(prefix)) {
+	for _, city := range c {
+		city := city
+		if strings.HasPrefix(strings.ToLower(string(city.Name)), strings.ToLower(prefix)) {
 			if ret != nil {
 				return nil, fmt.Errorf("'%v' is ambiguous", prefix)
 			}
-			ret = c
+			ret = city
 		}
 	}
 	if ret == nil {
@@ -95,8 +137,8 @@ func (c *Cities) GetCityByPrefix(prefix string) (*City, error) {
 	return ret, nil
 }
 
-func (c *Cities) GetCity(city CityName) (*City, error) {
-	for _, c := range c.Cities {
+func (c Cities) GetCity(city CityName) (*City, error) {
+	for _, c := range c {
 		if c.Name == CityName(city) {
 			return c, nil
 		}
@@ -106,7 +148,7 @@ func (c *Cities) GetCity(city CityName) (*City, error) {
 
 func (c Cities) WithDisease(disease DiseaseType) []*City {
 	cities := []*City{}
-	for _, city := range c.Cities {
+	for _, city := range c {
 		if city.Disease == disease {
 			cities = append(cities, city)
 		}
@@ -116,7 +158,7 @@ func (c Cities) WithDisease(disease DiseaseType) []*City {
 
 func (c Cities) CityNames() []CityName {
 	names := []CityName{}
-	for _, city := range c.Cities {
+	for _, city := range c {
 		names = append(names, city.Name)
 	}
 	return names
@@ -174,9 +216,9 @@ func (c *CityDeck) EpidemicsDrawn() int {
 	return count
 }
 
-func (c *CityDeck) ProbabilityOfDrawing(cn CityName) float64 {
+func (c *CityDeck) ProbabilityOfDrawing(cn CardName) float64 {
 	for _, already := range c.Drawn {
-		if already.City.Name == cn {
+		if already.Name() == cn {
 			return 0.0
 		}
 	}
@@ -186,8 +228,8 @@ func (c *CityDeck) ProbabilityOfDrawing(cn CityName) float64 {
 // Returns the probability of drawing a particular type. If the given
 // disease type is Faded, will compare against the current disease instead
 // of the original disease.
-func (c *CityDeck) ProbabilityOfDrawingType(dt DiseaseType) float64 {
-	inAll := c.RemainingCardsWith(dt)
+func (c *CityDeck) ProbabilityOfDrawingType(dt DiseaseType, cities *Cities) float64 {
+	inAll := c.RemainingCardsWith(dt, cities)
 	return float64(inAll) / (float64(c.RemainingCards()))
 }
 
@@ -195,21 +237,29 @@ func (c *CityDeck) RemainingCards() int {
 	return c.Total() - len(c.Drawn)
 }
 
-func (c *CityDeck) RemainingCardsWith(dt DiseaseType) int {
+func (c *CityDeck) RemainingCardsWith(dt DiseaseType, cities *Cities) int {
 	inAll := 0
 	for _, card := range c.All {
-		toCompare := card.City.OriginalDisease
+		if !card.IsCity() {
+			continue
+		}
+		city, _ := cities.GetCity(card.CityName)
+		toCompare := city.OriginalDisease
 		if dt == Faded.Type {
-			toCompare = card.City.Disease
+			toCompare = city.Disease
 		}
 		if toCompare == dt {
 			inAll++
 		}
 	}
 	for _, card := range c.Drawn {
-		toCompare := card.City.OriginalDisease
+		if !card.IsCity() {
+			continue
+		}
+		city, _ := cities.GetCity(card.CityName)
+		toCompare := city.OriginalDisease
 		if dt == Faded.Type {
-			toCompare = card.City.Disease
+			toCompare = city.Disease
 		}
 		if toCompare == dt {
 			inAll--
@@ -218,54 +268,72 @@ func (c *CityDeck) RemainingCardsWith(dt DiseaseType) int {
 	return inAll
 }
 
-func (c *CityDeck) Draw(cn CityName) (*CityCard, error) {
-	for _, card := range c.Drawn {
-		if card.City.Name == cn {
-			return nil, fmt.Errorf("%v has already been drawn from the city deck", cn)
-		}
-	}
-	c.ProbabilityModel.DrawCity(len(c.Drawn) - len(c.StartCities))
+func (c *CityDeck) GetCard(cn CardName) (*CityCard, error) {
 	for _, card := range c.All {
-		if card.City.Name == cn {
-			c.Drawn = append(c.Drawn, card)
+		if card.Name() == cn {
 			return &card, nil
 		}
 	}
-	return nil, fmt.Errorf("No city called %v in the city deck", cn)
+	return nil, fmt.Errorf("No card named %v in deck", cn)
+}
+
+func (c *CityDeck) GetCardByPrefix(prefix string) (*CityCard, error) {
+	var ret *CityCard
+	for _, card := range c.All {
+		if card.IsEpidemic {
+			continue
+		}
+		card := card
+		if strings.HasPrefix(strings.ToLower(string(card.Name())), strings.ToLower(prefix)) {
+			if ret != nil {
+				return nil, fmt.Errorf("'%v' is ambiguous", prefix)
+			}
+			ret = &card
+		}
+	}
+	if ret == nil {
+		return nil, fmt.Errorf("%v is not a prefix for any city", prefix)
+	}
+	return ret, nil
+}
+
+func (c *CityDeck) DrawCard(cn CardName) (*CityCard, error) {
+	for _, card := range c.Drawn {
+		if card.Name() == cn {
+			return nil, fmt.Errorf("%v has already been drawn from the city deck", cn)
+		}
+	}
+	var target CityCard
+	for _, card := range c.All {
+		if card.Name() == cn {
+			target = card
+		}
+	}
+	if target.Name() == "" {
+		return nil, fmt.Errorf("No card called %v in the city deck", cn)
+	}
+	c.ProbabilityModel.DrawCity(c.probabilityIndex())
+	c.Drawn = append(c.Drawn, target)
+	return &target, nil
 }
 
 func (c *CityDeck) GetCity(cn CityName) (*CityCard, error) {
 	for _, card := range c.All {
-		if card.City.Name == cn {
+		if card.CityName == cn && card.IsCity() {
 			return &card, nil
 		}
 	}
-	return nil, fmt.Errorf("No card named %v in the deck", cn)
+	return nil, fmt.Errorf("No city named %v in the deck", cn)
 }
 
 func (c *CityDeck) NumFundedEvents() int {
 	var numFunded int
 	for _, card := range c.All {
-		if card.IsFundedEvent {
+		if card.IsFundedEvent() {
 			numFunded++
 		}
 	}
 	return numFunded
-}
-
-func (c *CityDeck) DrawFundedEvent() error {
-	var alreadyDrawn int
-	for _, card := range c.Drawn {
-		if card.IsFundedEvent {
-			alreadyDrawn++
-		}
-	}
-	if alreadyDrawn >= c.NumFundedEvents() {
-		return fmt.Errorf("Have already drawn %v funded events, cannot draw more", alreadyDrawn)
-	}
-	c.ProbabilityModel.DrawCity(len(c.Drawn) - len(c.StartCities))
-	c.Drawn = append(c.Drawn, CityCard{City{}, false, true})
-	return nil
 }
 
 func (c *CityDeck) DrawEpidemic() error {
@@ -279,9 +347,13 @@ func (c *CityDeck) DrawEpidemic() error {
 	if drawnEpis >= totalEpis {
 		return fmt.Errorf("Already drawn %v epidemics this game, there shouldn't be any more", drawnEpis)
 	}
-	c.ProbabilityModel.DrawEpidemic(len(c.Drawn) - len(c.StartCities))
-	c.Drawn = append(c.Drawn, CityCard{City{}, true, false})
+	c.ProbabilityModel.DrawEpidemic(c.probabilityIndex())
+	c.Drawn = append(c.Drawn, CityCard{"", true, ""})
 	return nil
+}
+
+func (c CityDeck) probabilityIndex() int {
+	return len(c.Drawn) - len(c.StartCities)
 }
 
 // The function Pe(x) is the probabiltiy of drawing an epidemic at index x.
@@ -293,13 +365,13 @@ func (c *CityDeck) DrawEpidemic() error {
 // a probability of epidemic be greater than 1.0. This is entirely possible in
 // the game of Pandemic.
 func (c CityDeck) probabilityOfEpidemic() float64 {
-	index := len(c.Drawn) - len(c.StartCities)
+	index := c.probabilityIndex()
 	analysis := c.ProbabilityModel.EpidemicAnalysis(index)
 	return analysis.FirstCardProbability + analysis.SecondCardProbability
 }
 
 func (c CityDeck) EpidemicAnalysis() EpidemicAnalysis {
-	index := len(c.Drawn) - len(c.StartCities)
+	index := c.probabilityIndex()
 	return c.ProbabilityModel.EpidemicAnalysis(index)
 }
 

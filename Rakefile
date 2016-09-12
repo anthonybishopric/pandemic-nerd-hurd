@@ -11,5 +11,5 @@ task :test do
 end
 
 task :default => :install do
-	exec "pandemic-nerd-hurd start --month jan --funded-events 4"
+	exec "pandemic-nerd-hurd start --month jan"
 end

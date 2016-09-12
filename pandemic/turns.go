@@ -11,8 +11,8 @@ type GameTurns struct {
 }
 
 type Turn struct {
-	Player      *Player    `json:"player"`
-	DrawnCities []CityName `json:"drawn_cities"`
+	Player     *Player     `json:"player"`
+	DrawnCards []*CityCard `json:"drawn_cards"`
 }
 
 func (t *GameTurns) AddPlayer(p *Player) error {
@@ -49,8 +49,8 @@ func (t *GameTurns) NextTurn() (*Turn, error) {
 
 func (t *GameTurns) addTurn() *Turn {
 	return &Turn{
-		Player:      t.PlayerOrder[t.CurTurn%len(t.PlayerOrder)],
-		DrawnCities: []CityName{},
+		Player:     t.PlayerOrder[t.CurTurn%len(t.PlayerOrder)],
+		DrawnCards: []*CityCard{},
 	}
 }
 
@@ -59,10 +59,10 @@ func (t *GameTurns) AddDrawnToCurrent(card *CityCard) error {
 	if err != nil {
 		return err
 	}
-	if len(turn.DrawnCities) == CityCardsPerTurn {
+	if len(turn.DrawnCards) == CityCardsPerTurn {
 		return fmt.Errorf("Already drew %v cards this turn", CityCardsPerTurn)
 	}
-	turn.DrawnCities = append(turn.DrawnCities, card.City.Name)
+	turn.DrawnCards = append(turn.DrawnCards, card)
 	return nil
 }
 

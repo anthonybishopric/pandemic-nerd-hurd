@@ -25,32 +25,31 @@ type GameState struct {
 	GameTurns     *GameTurns     `json:"game_turns"`
 }
 
-func NewGame(citiesFile string, gameName string, numFundedEvents int, playersFile string) (*GameState, error) {
-	var cities Cities
-	cityData, err := ioutil.ReadFile(citiesFile)
+type NewGameSettings struct {
+	Cities       Cities         `json:"cities"`
+	Players      []*Player      `json:"players"`
+	FundedEvents []*FundedEvent `json:"funded_events"`
+}
+
+func NewGame(newGameFile string, gameName string) (*GameState, error) {
+	var newGameSettings NewGameSettings
+	newGameData, err := ioutil.ReadFile(newGameFile)
 	if err != nil {
-		return nil, fmt.Errorf("Could not read cities file at %v: %v", citiesFile, err)
+		return nil, fmt.Errorf("Could not read new game file at %v: %v", newGameFile, err)
 	}
-	err = json.Unmarshal(cityData, &cities)
+	err = json.Unmarshal(newGameData, &newGameSettings)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid cities JSON file at %v: %v", citiesFile, err)
+		return nil, fmt.Errorf("Invalid new game JSON file at %v: %v", newGameFile, err)
 	}
-	var players []*Player
-	playerData, err := ioutil.ReadFile(playersFile)
-	if err != nil {
-		return nil, fmt.Errorf("Could not read players file at %v: %v", playersFile, err)
-	}
-	err = json.Unmarshal(playerData, &players)
-	if err != nil {
-		return nil, fmt.Errorf("Invalid player data: %v", err)
-	}
+	cities := Cities(newGameSettings.Cities)
+	players := newGameSettings.Players
 
 	excludeFromCityDeck := Set{}
 	for _, player := range players {
-		if len(player.StartCities) != 2 {
+		if len(player.StartCards) != 2 {
 			return nil, fmt.Errorf("Each player must start with 2 city cards")
 		}
-		for _, cityName := range player.StartCities {
+		for _, cityName := range player.StartCards {
 			excludeFromCityDeck.Add(cityName)
 		}
 	}
@@ -58,18 +57,18 @@ func NewGame(citiesFile string, gameName string, numFundedEvents int, playersFil
 		return nil, fmt.Errorf("Duplicate cities detected, check the start information: %+v", excludeFromCityDeck)
 	}
 
-	cityDeck, err := cities.GenerateCityDeck(EpidemicsPerGame, numFundedEvents, excludeFromCityDeck)
+	cityDeck, err := cities.GenerateCityDeck(EpidemicsPerGame, newGameSettings.FundedEvents, excludeFromCityDeck)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, player := range players {
-		for _, startCity := range player.StartCities {
-			city, err := cityDeck.GetCity(startCity)
+		for _, startCard := range player.StartCards {
+			card, err := cityDeck.GetCard(startCard)
 			if err != nil {
-				return nil, fmt.Errorf("%v is not a valid start city: %v", startCity, err)
+				return nil, fmt.Errorf("%v is not a valid start city: %v", startCard, err)
 			}
-			player.Cities = append(player.Cities, city)
+			player.Cards = append(player.Cards, card)
 		}
 	}
 
@@ -99,21 +98,20 @@ func LoadGame(gameFile string) (*GameState, error) {
 	return &gameState, nil
 }
 
-func (gs GameState) DrawFundedEvent() error {
-	err := gs.CityDeck.DrawFundedEvent()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (gs GameState) ProbabilityOfCuring(player *Player, dt DiseaseType) float64 {
 	// (diseaseColor choose requiredToCure)*(notDiseaseColor choose totalLessRequired)/(allCards choose totalExpectedDraws)
-	remainingCards := gs.CityDeck.RemainingCardsWith(dt)
+	remainingCards := gs.CityDeck.RemainingCardsWith(dt, gs.Cities)
 	// TODO: make disease curability more programatic
 	totalRequired := 5
-	for _, card := range player.Cities {
-		if card.City.Disease == dt {
+	for _, card := range player.Cards {
+		if !card.IsCity() {
+			continue
+		}
+		city, err := gs.Cities.GetCity(card.CityName)
+		if err != nil {
+			panic("City card with no corresponding city: " + card.CityName)
+		}
+		if city.Disease == dt {
 			totalRequired--
 		}
 	}
@@ -126,20 +124,20 @@ func (gs GameState) ProbabilityOfCuring(player *Player, dt DiseaseType) float64 
 	return combinations.AtLeastNDraws(allRemaining, drawsRemaining, totalRequired, remainingCards)
 }
 
-func (gs GameState) DrawCity(cityName CityName) error {
+func (gs GameState) DrawCard(cn CardName) error {
 	curTurn, err := gs.GameTurns.CurrentTurn()
 	if err != nil {
 		return err
 	}
-	if len(curTurn.DrawnCities) == CityCardsPerTurn {
+	if len(curTurn.DrawnCards) == CityCardsPerTurn {
 		return fmt.Errorf("%v has already drawn %v cards this turn.", curTurn.Player.HumanName, CityCardsPerTurn)
 	}
-	city, err := gs.CityDeck.Draw(cityName)
+	card, err := gs.CityDeck.DrawCard(cn)
 	if err != nil {
 		return err
 	}
-	curTurn.DrawnCities = append(curTurn.DrawnCities, cityName)
-	curTurn.Player.Cities = append(curTurn.Player.Cities, city)
+	curTurn.DrawnCards = append(curTurn.DrawnCards, card)
+	curTurn.Player.Cards = append(curTurn.Player.Cards, card)
 	return nil
 }
 
@@ -147,11 +145,11 @@ func (gs GameState) NextTurn() (*Turn, error) {
 	return gs.GameTurns.NextTurn()
 }
 
-func (gs GameState) ExchangeCard(from, to *Player, name CityName) error {
+func (gs GameState) ExchangeCard(from, to *Player, name CardName) error {
 	var senderNewCards []*CityCard
 	var toGive *CityCard
-	for _, card := range from.Cities {
-		if card.City.Name == name {
+	for _, card := range from.Cards {
+		if card.Name() == name {
 			toGive = card
 		} else {
 			senderNewCards = append(senderNewCards, card)
@@ -160,8 +158,8 @@ func (gs GameState) ExchangeCard(from, to *Player, name CityName) error {
 	if toGive == nil {
 		return fmt.Errorf("%v does not seem to have the card %v", from.HumanName, name)
 	}
-	from.Cities = senderNewCards
-	to.Cities = append(to.Cities, toGive)
+	from.Cards = senderNewCards
+	to.Cards = append(to.Cards, toGive)
 	return nil
 }
 
@@ -259,7 +257,7 @@ func (gs GameState) ProbabilityOfCity(cn CityName) float64 {
 	// Check: does a city with 3 get additionally infected on drawing the city card?
 	// Assume no, and no outbreak, for now.
 	if DataForDisease(city.Disease).InfectOnCityDraw && city.NumInfections < 3 {
-		cityDrawInfectRate = gs.CityDeck.ProbabilityOfDrawing(cn)
+		cityDrawInfectRate = gs.CityDeck.ProbabilityOfDrawing(cn.CardName())
 	}
 	// P(epidemic)*P(pull from bottom or from infect drawn) + P(!epidemic)*P(infection deck draw)
 	pEpi := gs.CityDeck.probabilityOfEpidemic()
