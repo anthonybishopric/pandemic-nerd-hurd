@@ -51,7 +51,11 @@ func (t *GameTurns) RemainingTurnsFor(remainingCityCards int, name string) int {
 	if lastPlayerIndex == index {
 		return base + oddAdd
 	}
-	if lastPlayerIndex > index && remainingCityCards/2 > len(t.PlayerOrder) {
+	turnDistance := index - lastPlayerIndex + 1
+	if turnDistance < 0 {
+		turnDistance += len(t.PlayerOrder)
+	}
+	if 2*turnDistance < (remainingCityCards)%(2*len(t.PlayerOrder)) {
 		return base + 1
 	}
 	return base
