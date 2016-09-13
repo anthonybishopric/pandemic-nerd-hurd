@@ -99,11 +99,11 @@ func (p *PandemicView) renderCityDeckAndTurns(game *pandemic.GameState, gui *goc
 
 	fmt.Fprintf(cityView, "Upcoming Draws Guaranteed Safe: %v\n", p.colorUpcomingSafeCount(analysis.ComingDrawsWith0))
 
-	fmt.Fprintf(cityView, "Draw Chance %v  %.2f  ", p.iconFor(pandemic.Black.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Black.Type, game.Cities))
-	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Red.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Red.Type, game.Cities))
-	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Blue.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Blue.Type, game.Cities))
-	fmt.Fprintf(cityView, "%v  %.2f  ", p.iconFor(pandemic.Yellow.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Yellow.Type, game.Cities))
-	fmt.Fprintf(cityView, "%v  %.2f\n", p.iconFor(pandemic.Faded.Type), game.CityDeck.ProbabilityOfDrawingType(pandemic.Faded.Type, game.Cities))
+	fmt.Fprintf(cityView, "Card counts %v  %v  ", p.iconFor(pandemic.Black.Type), game.CityDeck.RemainingCardsWith(pandemic.Black.Type, game.Cities))
+	fmt.Fprintf(cityView, "%v  %v  ", p.iconFor(pandemic.Red.Type), game.CityDeck.RemainingCardsWith(pandemic.Red.Type, game.Cities))
+	fmt.Fprintf(cityView, "%v  %v  ", p.iconFor(pandemic.Blue.Type), game.CityDeck.RemainingCardsWith(pandemic.Blue.Type, game.Cities))
+	fmt.Fprintf(cityView, "%v  %v  ", p.iconFor(pandemic.Yellow.Type), game.CityDeck.RemainingCardsWith(pandemic.Yellow.Type, game.Cities))
+	fmt.Fprintf(cityView, "%v  %v\n", p.iconFor(pandemic.Faded.Type), game.CityDeck.RemainingCardsWith(pandemic.Faded.Type, game.Cities))
 
 	turnView, err := gui.SetView("Turns", topX, topY+(bottomY-topY)/2, bottomX, bottomY)
 	if err != nil && err != gocui.ErrUnknownView {
@@ -127,6 +127,7 @@ func (p *PandemicView) renderCityDeckAndTurns(game *pandemic.GameState, gui *goc
 		fmt.Fprint(turnView, " ")
 	}
 	fmt.Fprintln(turnView)
+	fmt.Fprintf(turnView, "%v has %v turns left\n", cur.Player.HumanName, game.GameTurns.RemainingTurnsFor(game.CityDeck.RemainingCards(), cur.Player.HumanName))
 
 	// print all cards
 	fmt.Fprint(turnView, "Cards: ")
