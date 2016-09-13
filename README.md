@@ -22,5 +22,4 @@ _Features_
 
 _Code Fixes_
 * Keep pointers to actual epidemic and funded event cards in players / turns
-* Funded events need to be named and tracked.
 * BUG: current turn on loading a save file is not the correct pointer to a player.

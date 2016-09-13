@@ -31,6 +31,32 @@ func (t *GameTurns) AddPlayer(p *Player) error {
 	return nil
 }
 
+func (t *GameTurns) RemainingTurnsFor(remainingCityCards int, name string) int {
+	index := -1
+	for i, player := range t.PlayerOrder {
+		if player.HumanName == name {
+			index = i
+		}
+	}
+	if index == -1 {
+		return 0
+	}
+
+	lastPlayerIndex := (t.CurTurn + remainingCityCards/2) % len(t.PlayerOrder)
+	base := remainingCityCards / (2 * len(t.PlayerOrder))
+	var oddAdd int
+	if remainingCityCards%2 == 1 {
+		oddAdd = 1
+	}
+	if lastPlayerIndex == index {
+		return base + oddAdd
+	}
+	if lastPlayerIndex > index && remainingCityCards/2 > len(t.PlayerOrder) {
+		return base + 1
+	}
+	return base
+}
+
 func (t *GameTurns) CurrentTurn() (*Turn, error) {
 	if len(t.PlayerOrder) < 2 {
 		return nil, fmt.Errorf("Need at least two players before starting the game, currently have %v", len(t.PlayerOrder))

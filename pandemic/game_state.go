@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"sort"
 	"strings"
 
@@ -120,7 +119,7 @@ func (gs GameState) ProbabilityOfCuring(player *Player, dt DiseaseType) float64 
 	}
 
 	allRemaining := gs.CityDeck.RemainingCards()
-	drawsRemaining := int(math.Floor(float64(allRemaining)/4.0)) - 2 // you don't get to use your last draw
+	drawsRemaining := 2 * (gs.GameTurns.RemainingTurnsFor(allRemaining, player.HumanName) - 1) // you don't get to use your last draw
 	return combinations.AtLeastNDraws(allRemaining, drawsRemaining, totalRequired, remainingCards)
 }
 
