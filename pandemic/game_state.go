@@ -114,8 +114,12 @@ func (gs GameState) ProbabilityOfCuring(player *Player, dt DiseaseType) float64 
 			totalRequired--
 		}
 	}
-	if player.Character != nil && player.Character.Type == Scientist {
-		totalRequired--
+	if player.Character != nil {
+		if player.Character.Type == Scientist {
+			totalRequired--
+		} else if player.Character.Type == Colonel {
+			totalRequired += 2
+		}
 	}
 
 	allRemaining := gs.CityDeck.RemainingCards()

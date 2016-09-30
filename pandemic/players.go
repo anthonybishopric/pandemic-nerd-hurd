@@ -19,8 +19,8 @@ const (
 )
 
 type Player struct {
-	HumanName  string `json:"human_name"`
-	Character  *Character
+	HumanName  string     `json:"human_name"`
+	Character  *Character `json:"character"`
 	Location   CityName
 	StartCards []CardName `json:"start_cards"`
 	Cards      []*CityCard
@@ -41,6 +41,7 @@ func (p *Player) Discard(cardName CardName) error {
 }
 
 type Character struct {
-	Name string        `json:"name"`
-	Type CharacterType `json:"character_type"`
+	Name        string        `json:"name"`
+	Type        CharacterType `json:"character_type"`
+	TurnMessage string        `json:"turn_message"`
 }

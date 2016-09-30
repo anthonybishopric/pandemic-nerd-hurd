@@ -128,6 +128,9 @@ func (p *PandemicView) renderCityDeckAndTurns(game *pandemic.GameState, gui *goc
 	}
 	fmt.Fprintln(turnView)
 	fmt.Fprintf(turnView, "%v has %v turns left\n", cur.Player.HumanName, game.GameTurns.RemainingTurnsFor(game.CityDeck.RemainingCards(), cur.Player.HumanName))
+	if cur.Player.Character != nil && cur.Player.Character.TurnMessage != "" {
+		fmt.Fprintln(turnView, p.colorAllGood(cur.Player.Character.TurnMessage))
+	}
 
 	// print all cards
 	fmt.Fprint(turnView, "Cards: ")
