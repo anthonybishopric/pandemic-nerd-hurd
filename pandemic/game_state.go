@@ -119,6 +119,8 @@ func (gs GameState) ProbabilityOfCuring(player *Player, dt DiseaseType) float64 
 			totalRequired--
 		} else if player.Character.Type == Colonel {
 			totalRequired += 2
+		} else if player.Character.Type == Soldier {
+			return 0.0
 		}
 	}
 

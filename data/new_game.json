@@ -1,27 +1,37 @@
 {
     "players": [
         {
+            "human_name": "MacRae",
+            "start_cards": ["lagos", "seoul"],
+            "character": {
+                "type": "Soldier"
+            }
+        },
+        {
             "human_name": "Anthony",
-            "start_cards": ["sanfrancisco", "madrid"]
+            "start_cards": ["kolkata", "shanghai"],
+            "character": {
+                "type": "Dispatcher",
+                "turn_message": "pilot"
+            }
         },
         {
             "human_name": "Benji",
-            "start_cards": ["sydney", "moscow"]
-        },
-        {
-            "human_name": "MacRae",
-            "start_cards": ["bogota", "mexicocity"]
+            "start_cards": ["algiers", "sanfrancisco"],
+            "character": {
+                "type": "QuarantineSpecialist",
+                "turn_message": "forecast"
+            }
         },
         {
             "human_name": "Will",
-            "start_cards": ["osaka", "essen"]
+            "start_cards": ["mumbai", "istanbul"],
+            "character": {
+                "type": "OperationsExpert"
+            }
         }
     ],
-    "funded_events": [
-        {
-            "name": "silentnight"
-        }
-    ],
+    "funded_events": [],
     "cities": [
         {
             "name":    "sanfrancisco",

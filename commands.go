@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -87,6 +88,14 @@ func (p *PandemicView) runCommand(gameState *pandemic.GameState, consoleView *go
 			fmt.Fprintln(consoleView, p.colorWarning("Could not move on to next turn: %v", err))
 		} else {
 			fmt.Fprintf(consoleView, "It is now %v's turn\n", turn.Player.HumanName)
+			message := []string{turn.Player.HumanName}
+			if turn.Player.Character != nil && turn.Player.Character.TurnMessage != "" {
+				message = append(message, strings.Split(turn.Player.Character.TurnMessage, " ")...)
+			}
+			err = exec.Command("say", message...).Run()
+			if err != nil {
+				fmt.Fprintln(consoleView, p.colorOhFuck("Could not say message out loud: %v", strings.Join(message, " ")))
+			}
 		}
 	case "give-card", "g":
 		if len(commandArgs) != 3 {

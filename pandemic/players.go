@@ -4,18 +4,19 @@ import (
 	"fmt"
 )
 
-type CharacterType int
+type CharacterType string
 
 const (
-	Medic = CharacterType(iota)
-	Dispatcher
-	Researcher
-	Scientist
-	Civilian
-	QuarantineSpecialist
-	Colonel
-	OperationsExpert
-	Generalist
+	Medic                = "Medic"
+	Dispatcher           = "Dispatcher"
+	Researcher           = "Researcher"
+	Scientist            = "Scientist"
+	Civilian             = "Civilian"
+	QuarantineSpecialist = "QuarantineSpecialist"
+	Colonel              = "Colonel"
+	OperationsExpert     = "OperationsExpert"
+	Generalist           = "Generalist"
+	Soldier              = "Soldier"
 )
 
 type Player struct {
@@ -42,6 +43,6 @@ func (p *Player) Discard(cardName CardName) error {
 
 type Character struct {
 	Name        string        `json:"name"`
-	Type        CharacterType `json:"character_type"`
+	Type        CharacterType `json:"type"`
 	TurnMessage string        `json:"turn_message"`
 }
