@@ -17,6 +17,7 @@ const (
 	OperationsExpert     = "OperationsExpert"
 	Generalist           = "Generalist"
 	Soldier              = "Soldier"
+	Virologist           = "Virologist"
 )
 
 type Player struct {

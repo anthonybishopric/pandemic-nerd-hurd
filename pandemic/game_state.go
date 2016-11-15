@@ -102,6 +102,9 @@ func (gs GameState) ProbabilityOfCuring(player *Player, dt DiseaseType) float64 
 	remainingCards := gs.CityDeck.RemainingCardsWith(dt, gs.Cities)
 	// TODO: make disease curability more programatic
 	totalRequired := 5
+	if dt == Red.Type || dt == Black.Type {
+		totalRequired = 4
+	}
 	for _, card := range player.Cards {
 		if !card.IsCity() {
 			continue

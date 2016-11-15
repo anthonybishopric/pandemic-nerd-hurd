@@ -1,37 +1,40 @@
 {
     "players": [
         {
-            "human_name": "MacRae",
-            "start_cards": ["lagos", "seoul"],
+            "human_name": "Will",
+            "start_cards": ["chennai", "delhi"],
             "character": {
-                "type": "Soldier"
+                "type": "Dispatcher",
+                "turn_message": "extra action"
+            }
+        },
+        {
+            "human_name": "MacRae",
+            "start_cards": ["taipei", "karachi"],
+            "character": {
+                "type": "QuarantineSpecialist",
+                "turn_message": "forecast and extra actions"
             }
         },
         {
             "human_name": "Anthony",
-            "start_cards": ["kolkata", "shanghai"],
+            "start_cards": ["hongkong", "losangeles"],
             "character": {
-                "type": "Dispatcher",
-                "turn_message": "pilot"
+                "type": "Medic",
+                "turn_message": "extra action and no fallen cities"
             }
         },
         {
             "human_name": "Benji",
-            "start_cards": ["algiers", "sanfrancisco"],
+            "start_cards": ["istanbul", "essen"],
             "character": {
-                "type": "QuarantineSpecialist",
-                "turn_message": "forecast"
-            }
-        },
-        {
-            "human_name": "Will",
-            "start_cards": ["mumbai", "istanbul"],
-            "character": {
-                "type": "OperationsExpert"
+                "type": "Soldier",
+                "turn_message": "extra action"
             }
         }
     ],
-    "funded_events": [],
+    "funded_events": [
+    ],
     "cities": [
         {
             "name":    "sanfrancisco",
