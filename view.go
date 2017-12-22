@@ -34,14 +34,14 @@ func NewView(logger *logrus.Logger) *PandemicView {
 }
 
 func (p *PandemicView) Start(game *pandemic.GameState) {
-	gui := gocui.NewGui()
+	gui, err := gocui.NewGui(gocui.OutputNormal)
 
-	if err := gui.Init(); err != nil {
+	if err != nil {
 		p.logger.Errorln("Could not init GUI: %v", err)
 	}
 	defer gui.Close()
 
-	gui.SetLayout(func(gui *gocui.Gui) error {
+	gui.SetManagerFunc(func(gui *gocui.Gui) error {
 		width, height := gui.Size()
 
 		p.renderCommandsView(game, gui, width)
@@ -52,7 +52,6 @@ func (p *PandemicView) Start(game *pandemic.GameState) {
 		p.setUpKeyBindings(game, gui, "Commands")
 		gui.Cursor = true
 		gui.SetCurrentView("Commands")
-		gui.Editor = gocui.DefaultEditor
 		return nil
 	})
 
